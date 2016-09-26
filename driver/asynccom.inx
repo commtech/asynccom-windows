@@ -1,0 +1,174 @@
+;
+;    Copyright (C) 2016  Commtech, Inc.
+;
+;    This file is part of asynccom-windows.
+;
+;    asynccom-windows is free software: you can redistribute it and/or modify it
+;    under the terms of the GNU General Public License as published bythe Free
+;    Software Foundation, either version 3 of the License, or (at your option)
+;    any later version.
+;
+;    asynccom-windows is distributed in the hope that it will be useful, but WITHOUT
+;    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+;    more details.
+;
+;    You should have received a copy of the GNU General Public License along
+;    with asynccom-windows.  If not, see <http://www.gnu.org/licenses/>.
+;
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=USBDevice
+ClassGuid={88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+;Class=Ports
+;ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
+Provider=%ManufacturerName%
+; May not need the following line at all
+DriverVer=06/29/2015,5.00.3788
+CatalogFile=asynccom.cat
+
+[SourceDisksNames]
+1=%asynccom_Install%,,,
+
+[SourceDisksFiles]
+asynccom.sys = 1
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=AsyncComClass_AddReg
+
+[AsyncComClass_AddReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-10
+
+[DestinationDirs]
+asynccom.Files.Ext = 10,System32\Drivers
+
+[ControlFlags]
+ExcludeFromSelect = *
+; ================= Device section =====================
+
+[Manufacturer]
+%ManufacturerName%=Microsoft,NT,NTx86,NTamd64
+
+; For Win2K
+[Microsoft.NT]
+%AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0030
+%AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0031
+
+[Microsoft.NTx86]
+%AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0030
+%AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0031
+
+[Microsoft.NTamd64]
+%AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0030
+%AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0031
+
+[asynccom.Dev.NT]
+CopyFiles=asynccom.Files.Ext
+AddReg=asynccom.AddReg
+
+[asynccom.NT.HW]
+AddReg=asynccom.AddReg.Guid
+
+[asynccom.Dev.NT.Services]
+AddService = asynccom, %SPSVCINST_ASSOCSERVICE%, asynccom.AddService
+
+[asynccom.NTx86]
+CopyFiles=asynccom.Files.Ext
+AddReg=asynccom.AddReg
+
+[asynccom.NTx86.HW]
+AddReg=asynccom.AddReg.Guid
+
+[asynccom.NTx86.Services]
+Addservice = asynccom,%SPSVCINST_ASSOCSERVICE%,asynccom.AddService
+
+[asynccom.NTamd64]
+CopyFiles=asynccom.Files.Ext
+AddReg=asynccom.AddReg
+
+[asynccom.NTamd64.HW]
+AddReg=asynccom.AddReg.Guid
+
+[asynccom.NTamd64.Services]
+Addservice = asynccom,%SPSVCINST_ASSOCSERVICE%,asynccom.AddService
+
+[asynccom.AddReg]
+; Deprecating - do not use in new apps to identify a osrusbfx2 driver
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,asynccom.sys
+; You may optionally include a check for DriverBase in your application to check for a asynccom driver
+HKR,,DriverBase,,asynccom.sys
+HKR,"Parameters","MaximumTransferSize",0x10001,4096
+HKR,"Parameters","DebugLevel",0x10001,2
+HKR,,FriendlyName,,%asynccom_Description%
+HKR,,PortSubClass,1,01
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+
+[asynccom.AddService]
+DisplayName    = %asynccom.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %10%\System32\Drivers\asynccom.sys
+LoadOrderGroup = Base
+
+[asynccom.Files.Ext]
+asynccom.sys
+
+[asynccom.AddReg.Guid]
+HKR,,DriverGUID,,%asynccom.GUID%
+;HKR,,DriverPowerPolicySetup,,%ENABLE_DRIVER_POWER_POLICY%
+
+[SourceDisksNames]
+1=%Disk_Description%,,,
+
+[SourceDisksFiles]
+asynccom.sys = 1
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+;-------------- WDF Coinstaller installation
+
+[DestinationDirs]
+CoInstaller_CopyFiles = 11
+
+[asynccom.Dev.NT.CoInstallers]
+AddReg=CoInstaller_AddReg
+CopyFiles=CoInstaller_CopyFiles
+
+[CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[SourceDisksFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+[CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[asynccom.Dev.NT.Wdf]
+KmdfService = asynccom, asynccom_wdfsect
+[asynccom.NTamd64.Wdf]
+KmdfService = asynccom, asynccom_wdfsect
+
+[asynccom.NTx86.Wdf]
+KmdfService = asynccom, asynccom_wdfsect
+
+
+[asynccom_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+;---------------------------------------------------------------;
+
+[Strings]
+ManufacturerName = "Commtech, Inc."
+Disk_Description="Async Com Installation Disk"
+AsyncCom.DeviceDesc="Async Com Communications Port"
+asynccom.SvcDesc="Async Com Service"
+ClassName       = "Async Com Devices"
+SPSVCINST_ASSOCSERVICE= 0x00000002
+asynccom.GUID="{AE18AA60-7F6A-11d4-97DD-00010229B959}"
