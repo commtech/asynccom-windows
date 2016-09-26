@@ -8,8 +8,7 @@ int main(void)
 {
 	HANDLE h = 0;
 	DWORD tmp;
-	//SERIAL_BAUD_RATE baud_rate;
-	unsigned divisor = 1;
+	SERIAL_BAUD_RATE baud_rate;
 	unsigned char odata[] = "Hello world!";
 	unsigned char idata[20];
 
@@ -19,12 +18,10 @@ int main(void)
 		fprintf(stderr, "CreateFile failed with %d\n", GetLastError());
 		return EXIT_FAILURE;
 	}
-	/*
+	
 	baud_rate.BaudRate = 115200;
 	DeviceIoControl(h, IOCTL_SERIAL_SET_BAUD_RATE, &baud_rate, sizeof(baud_rate), NULL, 0, &tmp, NULL);
-	*/
-	DeviceIoControl(h, IOCTL_ASYNCCOM_SET_DIVISOR, &divisor, sizeof(divisor), NULL, 0, &tmp, NULL);
-	
+
 	WriteFile(h, odata, sizeof(odata), &tmp, NULL);
 
 	/* Read the data back in (with our loopback connector) */
