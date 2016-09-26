@@ -5,7 +5,7 @@ The RX FIFO trigger level generates an interrupt whenever the receive FIFO level
 ###### Code Support
 | Code | Version |
 | ---- | ------- |
-| serialfc-windows | 1.0.0 |
+| asynccom-windows | 1.0.0 |
 
 ###### Operating Range
 | Card Family | Range |
