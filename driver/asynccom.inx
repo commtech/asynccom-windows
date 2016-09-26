@@ -37,11 +37,11 @@ asynccom.sys = 1
 ; ================= Class section =====================
 
 [ClassInstall32]
-Addreg=AsyncComClass_AddReg
+;Addreg=AsyncComClass_AddReg
 
-[AsyncComClass_AddReg]
-HKR,,,0,%ClassName%
-HKR,,Icon,,-10
+;[AsyncComClass_AddReg]
+;HKR,,,0,%ClassName%
+;HKR,,Icon,,-10
 
 [DestinationDirs]
 asynccom.Files.Ext = 10,System32\Drivers
@@ -55,15 +55,12 @@ ExcludeFromSelect = *
 
 ; For Win2K
 [Microsoft.NT]
-%AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0030
 %AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0031
 
 [Microsoft.NTx86]
-%AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0030
 %AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0031
 
 [Microsoft.NTamd64]
-%AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0030
 %AsyncCom.DeviceDesc%=asynccom, USB\VID_18f7&PID_0031
 
 [asynccom.Dev.NT]
