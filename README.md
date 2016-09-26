@@ -102,11 +102,9 @@ Once you understand how to achieve a desired baud rate, you can use our examples
 There are likely other configuration options you will need to set up for your  own program. All of these options are described on their respective documentation page.
 
 - [Connect](docs/connect.md)
-- [Card Type](docs/card-type.md)
 - [Clock Rate](docs/clock-rate.md)
 - [Echo Cancel](docs/echo-cancel.md)
 - [External Transmit](docs/external-transmit.md)
-- [Fixed Baud Rate](docs/fixed-baud-rate.md)
 - [Frame Length](docs/frame-length.md)
 - [Isochronous](docs/isochronous.md)
 - [9-Bit Protocol](docs/nine-bit.md)
@@ -114,7 +112,6 @@ There are likely other configuration options you will need to set up for your  o
 - [RS485](docs/rs485.md)
 - [RX Trigger](docs/rx-trigger.md)
 - [Sample Rate](docs/sample-rate.md)
-- [Termination](docs/termination.md)
 - [TX Trigger](docs/tx-trigger.md)
 - [Write](docs/write.md)
 - [Disconnect](docs/disconnect.md)
