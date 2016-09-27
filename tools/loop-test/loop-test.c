@@ -11,7 +11,7 @@ int main(void)
 	HANDLE h = 0;
 	DWORD tmp;
 	SERIAL_BAUD_RATE baud_rate;
-	int failures = 0;
+	int failures = 0, num_bytes = 10000;
 	ULONG mask = 0;
 
 	/* Open port 0 in a blocking IO mode */
@@ -37,10 +37,10 @@ int main(void)
 
 	baud_rate.BaudRate = 115200;
 	DeviceIoControl(h, IOCTL_SERIAL_SET_BAUD_RATE, &baud_rate, sizeof(baud_rate), NULL, 0, &tmp, NULL);
-	failures = loop_test(h, 10000);
+	failures = loop_test(h, num_bytes);
 	mask = SERIAL_PURGE_TXABORT | SERIAL_PURGE_RXABORT | SERIAL_PURGE_RXCLEAR;
 	DeviceIoControl(h, IOCTL_SERIAL_PURGE, &mask, sizeof(mask), NULL, 0, &tmp, NULL);
-	printf("115.2k test: %d failures\n", failures);
+	printf("115.2k test (%d bytes): %d failures\n",num_bytes, failures);
 	Sleep(1000);
 
 	// In this case, the formula is:
@@ -49,10 +49,10 @@ int main(void)
 
 	baud_rate.BaudRate = 9600;
 	DeviceIoControl(h, IOCTL_SERIAL_SET_BAUD_RATE, &baud_rate, sizeof(baud_rate), NULL, 0, &tmp, NULL);
-	failures = loop_test(h, 10000);
+	failures = loop_test(h, num_bytes);
 	mask = SERIAL_PURGE_TXABORT | SERIAL_PURGE_RXABORT | SERIAL_PURGE_RXCLEAR;
 	DeviceIoControl(h, IOCTL_SERIAL_PURGE, &mask, sizeof(mask), NULL, 0, &tmp, NULL);
-	printf("9.6k test:   %d failures\n", failures);
+	printf("9.6k test (%d bytes):   %d failures\n", num_bytes, failures);
 
 	CloseHandle(h);
 
@@ -63,7 +63,7 @@ int main(void)
 int loop_test(HANDLE h, int bytes_to_read)	
 {
 	int total_errors = 0, data_size = 0;
-	unsigned char odata[MAX_BUFFER], idata[MAX_BUFFER+2];
+	unsigned char odata[MAX_BUFFER] = { 0 }, idata[MAX_BUFFER + 2] = { 0 };
 	DWORD data_written, data_read;
 	int return_value = 0, total_bytes_read = 0, i = 0;
 
