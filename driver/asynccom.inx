@@ -20,8 +20,8 @@
 
 [Version]
 Signature="$WINDOWS NT$"
-Class=USBDevice
-ClassGuid={88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+Class=CommtechUSB
+ClassGuid=%commtech.GUID%
 ;Class=Ports
 ;ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
 Provider=%ManufacturerName%
@@ -37,11 +37,11 @@ asynccom.sys = 1
 ; ================= Class section =====================
 
 [ClassInstall32]
-;Addreg=AsyncComClass_AddReg
+Addreg=AsyncComClass_AddReg
 
-;[AsyncComClass_AddReg]
-;HKR,,,0,%ClassName%
-;HKR,,Icon,,-10
+[AsyncComClass_AddReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-10
 
 [DestinationDirs]
 asynccom.Files.Ext = 10,System32\Drivers
@@ -166,6 +166,7 @@ ManufacturerName = "Commtech, Inc."
 Disk_Description="Async Com Installation Disk"
 AsyncCom.DeviceDesc="Async Com Communications Port"
 asynccom.SvcDesc="Async Com Service"
-ClassName       = "Async Com Devices"
+ClassName       = "Commtech USB Devices"
 SPSVCINST_ASSOCSERVICE= 0x00000002
-asynccom.GUID="{AE18AA60-7F6A-11d4-97DD-00010229B959}"
+asynccom.GUID="{74A3CD54-4696-4B6D-9863-5A67936ED5FA}"
+commtech.GUID="{E85C65CC-B33B-40D4-815E-3657C2D05017}"
