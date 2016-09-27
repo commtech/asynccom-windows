@@ -15,11 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <MessageCompile Include="synccom.man">
-      <Filter>Resource Files</Filter>
-    </MessageCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="driver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -47,25 +42,13 @@
     </ClCompile>
     <ClCompile Include="device.c" />
     <ClCompile Include="device.c" />
-    <ClCompile Include="bulkrwr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="device.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ioctl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="frame.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bulkrwr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="device.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ioctl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="utils.c">
@@ -129,14 +112,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="synccom.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\deviceMetadata\B4D697F5-1C56-4807-ACCD-B28C09D37FF0.devicemetadata-ms" />
   </ItemGroup>
   <ItemGroup>
     <Inf Include="asynccom.inx" />
+  </ItemGroup>
+  <ItemGroup>
+    <MessageCompile Include="asynccom.man">
+      <Filter>Resource Files</Filter>
+    </MessageCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="asynccom.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
