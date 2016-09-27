@@ -10,53 +10,53 @@
     <events>
       <provider
           guid="{69cd60e3-430f-4da4-b1b3-e3bdaf945875}"
-          messageFileName="%Systemroot%\System32\drivers\synccom.SYS"
-          name="SYNCCOM"
-          resourceFileName="%SystemRoot%\System32\drivers\synccom.SYS"
-          symbol="SYNCCOM_PROVIDER"
+          messageFileName="%Systemroot%\System32\drivers\asynccom.SYS"
+          name="ASYNCCOM"
+          resourceFileName="%SystemRoot%\System32\drivers\asynccom.SYS"
+          symbol="ASYNCCOM_PROVIDER"
           >
         <channels>
           <channel
               chid="Analytic"
               enabled="false"
-              name="SyncCom/Analytic"
-              symbol="SYNCCOM_ANALYTIC"
+              name="AsyncCom/Analytic"
+              symbol="ASYNCCOM_ANALYTIC"
               type="Analytic"
               />
           <channel
               chid="operational"
               enabled="true"
               isolation="System"
-              message="$(string.SYNCCOM_OPERATIONAL.Name)"
-              name="SyncCom/Operational"
-              symbol="SYNCCOM_OPERATIONAL"
+              message="$(string.ASYNCCOM_OPERATIONAL.Name)"
+              name="AsyncCom/Operational"
+              symbol="ASYNCCOM_OPERATIONAL"
               type="Operational"
               />
         </channels>
         <keywords>
           <keyword
               mask="0x0000000000000010"
-              message="$(string.SYNCCOM_DEVICE_INFO_KEYWORD.message)"
+              message="$(string.ASYNCCOM_DEVICE_INFO_KEYWORD.message)"
               name="deviceinfo"
-              symbol="SYNCCOM_DEVICE_INFO_KEYWORD"
+              symbol="ASYNCCOM_DEVICE_INFO_KEYWORD"
               />
           <keyword
               mask="0x0000000000000040"
-              message="$(string.SYNCCOM_READ_WRITE_KEYWORD.message)"
+              message="$(string.ASYNCCOM_READ_WRITE_KEYWORD.message)"
               name="readwrite"
-              symbol="SYNCCOM_READ_WRITE_KEYWORD"
+              symbol="ASYNCCOM_READ_WRITE_KEYWORD"
               />
         </keywords>
         <opcodes>
           <!-- Defining our own custom opcode instead of using standard opcodes defined by winmeta.xml -->
           <opcode
               name="add"
-              symbol="SYNCCOM_DEVICE_ADD"
+              symbol="ASYNCCOM_DEVICE_ADD"
               value="10"
               />
           <opcode
               name="fail"
-              symbol="SYNCCOM_FAIL"
+              symbol="ASYNCCOM_FAIL"
               value="11"
               />
         </opcodes>
@@ -68,19 +68,19 @@
           <task
               eventGUID="{872c3c43-6899-4f1d-89b8-51a82f6db657}"
               name="deviceInit"
-              symbol="SYNCCOM_DEVICE_INIT"
+              symbol="ASYNCCOM_DEVICE_INIT"
               value="1"
               />
           <task
               eventGUID="{872c3c45-6899-4f1d-89b8-51a82f6db657}"
               name="read"
-              symbol="SYNCCOM_READ"
+              symbol="ASYNCCOM_READ"
               value="2"
               />
           <task
               eventGUID="{872c3c46-6899-4f1d-89b8-51a82f6db657}"
               name="write"
-              symbol="SYNCCOM_WRITE"
+              symbol="ASYNCCOM_WRITE"
               value="3"
               />
         </tasks>
@@ -256,15 +256,15 @@
     <resources culture="en-US">
       <stringTable>
         <string
-            id="SYNCCOM_DEVICE_INFO_KEYWORD.message"
+            id="ASYNCCOM_DEVICE_INFO_KEYWORD.message"
             value="Device events: fail to load, reenumerate"
             />
         <string
-            id="SYNCCOM_READ_WRITE_KEYWORD.message"
+            id="ASYNCCOM_READ_WRITE_KEYWORD.message"
             value="Read, Write events"
             />
         <string
-            id="SYNCCOM_OPERATIONAL.Name"
+            id="ASYNCCOM_OPERATIONAL.Name"
             value="Operational channel eventlog"
             />
         <string

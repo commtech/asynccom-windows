@@ -1,24 +1,24 @@
 /*
 Copyright (C) 2016  Commtech, Inc.
 
-This file is part of synccom-windows.
+This file is part of asynccom-windows.
 
-synccom-windows is free software: you can redistribute it and/or modify it
+asynccom-windows is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published bythe Free
 Software Foundation, either version 3 of the License, or (at your option)
 any later version.
 
-synccom-windows is distributed in the hope that it will be useful, but WITHOUT
+asynccom-windows is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
 more details.
 
 You should have received a copy of the GNU General Public License along
-with synccom-windows.  If not, see <http://www.gnu.org/licenses/>.
+with asynccom-windows.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SYNCCOM_DEFINES_H
-#define SYNCCOM_DEFINES_H
+#ifndef ASYNCCOM_DEFINES_H
+#define ASYNCCOM_DEFINES_H
 
 #include <ntddk.h>
 #include <wdf.h>
@@ -39,12 +39,12 @@ DEFINE_GUID(GUID_DEVCLASS_COMMTECH, 0xe85c65cc, 0xb33b, 0x40d4, 0x81, 0x5e, 0x36
 static const GUID COMMTECH_CLASS_GUID = { 0xe85c65cc, 0xb33b, 0x40d4,{ 0x81, 0x5e, 0x36, 0x57, 0xc2, 0xd0, 0x50, 0x17 } };
 */
 // {1F67CDC8-3E4C-42C6-980C-A79E79C728BC}
-static const GUID SYNCCOM_GUID = { 0x1f67cdc8, 0x3e4c, 0x42c6,{ 0x98, 0xc, 0xa7, 0x9e, 0x79, 0xc7, 0x28, 0xbc } };
+static const GUID ASYNCCOM_GUID = { 0x1f67cdc8, 0x3e4c, 0x42c6,{ 0x98, 0xc, 0xa7, 0x9e, 0x79, 0xc7, 0x28, 0xbc } };
 // {72896E8A-1CAC-4451-B295-255D3853C1F5}
-DEFINE_GUID(GUID_DEVCLASS_SYNCCOM, 0x72896e8a, 0x1cac, 0x4451, 0xb2, 0x95, 0x25, 0x5d, 0x38, 0x53, 0xc1, 0xf5);
+DEFINE_GUID(GUID_DEVCLASS_ASYNCCOM, 0x72896e8a, 0x1cac, 0x4451, 0xb2, 0x95, 0x25, 0x5d, 0x38, 0x53, 0xc1, 0xf5);
 // {573E8C73-0CB4-4471-A1BF-FAB26C31D384}
 // {36FC9E60-C465-11cf-8056-444553540000}
-DEFINE_GUID(GUID_DEVINTERFACE_SYNCCOM, 0x36fc9e60, 0xc465, 0x11cf, 0x80, 0x56, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+DEFINE_GUID(GUID_DEVINTERFACE_ASYNCCOM, 0x36fc9e60, 0xc465, 0x11cf, 0x80, 0x56, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
 // {DCCFD794-CB51-4D3B-8907-664F179EABA6}
 //DEFINE_GUID(GUID_DEVINTERFACE_SYNCCOM, 0xdccfd794, 0xcb51, 0x4d3b, 0x89, 0x7, 0x66, 0x4f, 0x17, 0x9e, 0xab, 0xa6);
 

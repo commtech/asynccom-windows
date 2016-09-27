@@ -14,8 +14,8 @@ with fscc-windows.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#ifndef synccom_DEBUG_H
-#define synccom_DEBUG_H
+#ifndef ASYNCCOM_DEBUG_H
+#define ASYNCCOM_DEBUG_H
 
 #include <ntddk.h>
 #include <wdf.h>

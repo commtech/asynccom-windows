@@ -4,9 +4,9 @@
 
 #define VER_FILETYPE                VFT_DRV
 #define VER_FILESUBTYPE             VFT2_DRV_SYSTEM
-#define VER_FILEDESCRIPTION_STR     "Fastcom: SyncCom"
-#define VER_INTERNALNAME_STR        "synccom.sys"
-#define VER_ORIGINALFILENAME_STR    "synccom.sys"
+#define VER_FILEDESCRIPTION_STR     "Fastcom: AsyncCom"
+#define VER_INTERNALNAME_STR        "asynccom.sys"
+#define VER_ORIGINALFILENAME_STR    "asynccom.sys"
 
 #include "common.ver"
 
