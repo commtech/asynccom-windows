@@ -4,7 +4,7 @@ Copyright (C) 2016  Commtech, Inc.
 This file is part of asynccom-windows.
 
 asynccom-windows is free software: you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published bythe Free
+under the terms of the GNU General Public License as published by the Free
 Software Foundation, either version 3 of the License, or (at your option)
 any later version.
 
@@ -299,7 +299,7 @@ typedef struct asynccom_port {
 	SERIAL_WMI_COMM_DATA WmiCommData;
 	SERIAL_HANDFLOW HandFlow;
 
-} ASYNCCOM_PORT, *PSYNCCOM_PORT;
+} ASYNCCOM_PORT, *PASYNCCOM_PORT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(ASYNCCOM_PORT, GetPortContext)
 

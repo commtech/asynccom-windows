@@ -4,7 +4,7 @@
 	This file is part of asynccom-windows.
 
 	asynccom-windows is free software: you can redistribute it and/or modify it
-	under the terms of the GNU General Public License as published bythe Free
+	under the terms of the GNU General Public License as published by the Free
 	Software Foundation, either version 3 of the License, or (at your option)
 	any later version.
 
@@ -267,7 +267,7 @@ void asynccom_port_received_data(__in  WDFUSBPIPE Pipe, __in  WDFMEMORY Buffer, 
 
 	UNREFERENCED_PARAMETER(Pipe);
 
-	port = (PSYNCCOM_PORT)Context;
+	port = (PASYNCCOM_PORT)Context;
 	return_if_untrue(port);
 	return_if_untrue(NumBytesTransferred > 2);
 

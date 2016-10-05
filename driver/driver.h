@@ -4,7 +4,7 @@ Copyright (C) 2016  Commtech, Inc.
 This file is part of asynccom-windows.
 
 asynccom-windows is free software: you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published bythe Free
+under the terms of the GNU General Public License as published by the Free
 Software Foundation, either version 3 of the License, or (at your option)
 any later version.
 
@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License along
 with asynccom-windows.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SYNCCOM_DRIVER_H
-#define SYNCCOM_DRIVER_H
+#ifndef ASYNCCOM_DRIVER_H
+#define ASYNCCOM_DRIVER_H
 #include <initguid.h>
 #include <ntddk.h>
 #include "usbdi.h"
