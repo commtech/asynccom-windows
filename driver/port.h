@@ -75,9 +75,9 @@ UINT32				asynccom_port_get_tx_trigger(_In_ struct asynccom_port *port);
 NTSTATUS			asynccom_port_set_rx_trigger(_In_ struct asynccom_port *port, UINT32 value);
 UINT32				asynccom_port_get_rx_trigger(_In_ struct asynccom_port *port);
 
+NTSTATUS			asynccom_port_set_xonoff(_In_ struct asynccom_port *port, BOOLEAN onoff);
 NTSTATUS			asynccom_port_set_sample_rate(_In_ struct asynccom_port *port, unsigned rate);
 NTSTATUS			asynccom_port_set_isochronous(_In_ struct asynccom_port *port, int mode);
-NTSTATUS			asynccom_port_set_pretend_xonoff(_In_ struct asynccom_port *port, BOOLEAN onoff);
 NTSTATUS			asynccom_port_set_break(_In_ struct asynccom_port *port, BOOLEAN onoff);
 NTSTATUS			asynccom_port_program_firmware(_In_ struct asynccom_port *port, unsigned char *firmware_line, size_t data_size);
 void				asynccom_port_set_clock_bits(_In_ struct asynccom_port *port, unsigned char *clock_data);

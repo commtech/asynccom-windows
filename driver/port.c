@@ -361,13 +361,11 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		break;
 	}
 	case IOCTL_SERIAL_SET_XOFF: {
-		//status = asynccom_port_set_pretend_xonoff(port, FALSE);
-		status = STATUS_NOT_SUPPORTED;
+		status = asynccom_port_set_xonoff(port, FALSE);
 		break;
 	}
 	case IOCTL_SERIAL_SET_XON: {
-		//status = asynccom_port_set_pretend_xonoff(port, TRUE);
-		status = STATUS_NOT_SUPPORTED;
+		status = asynccom_port_set_xonoff(port, TRUE);
 		break;
 	}
 	case IOCTL_SERIAL_SET_BREAK_ON: {
@@ -1055,26 +1053,22 @@ BOOLEAN asynccom_port_get_9bit(_In_ struct asynccom_port *port)
 	return (asynccom_port_get_spr_register(port, NMR_OFFSET)) ? TRUE : FALSE;
 }
 
-NTSTATUS asynccom_port_set_pretend_xonoff(_In_ struct asynccom_port *port, BOOLEAN onoff)
+NTSTATUS asynccom_port_set_xonoff(_In_ struct asynccom_port *port, BOOLEAN onoff)
 {
-	NTSTATUS status = STATUS_SUCCESS;
-	UNUSED(port);
-	UNUSED(onoff);
-	
-	if (onoff) {
-		port->TXHolding &= ~SERIAL_TX_XOFF;
-		// Disable and reenable interrupts to force it to start transmitting again. I don't know if that's possible.
+	NTSTATUS status = STATUS_SUCCESS, second_status = STATUS_SUCCESS;
+	UINT32 new_efr = 0x00, old_lcr = 0x00;
 
-	}
-	else {
-		port->TXHolding |= SERIAL_TX_XOFF;
-		if ((port->HandFlow.FlowReplace & SERIAL_RTS_MASK) == SERIAL_TRANSMIT_TOGGLE) {
-			//insertqueuedpc,StartTimerLowerRTS
-		}
+	old_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, 0xBF);
+	if (!NT_SUCCESS(status)) return status;
+	new_efr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET);
+	if (onoff) new_efr |= 0x0a;
+	else new_efr &= ~0x0a;
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET, new_efr);
+	second_status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, old_lcr);
+	if (!NT_SUCCESS(second_status)) return second_status;
 
-	}
 	return status;
-
 }
 
 NTSTATUS asynccom_port_set_break(_In_ struct asynccom_port *port, BOOLEAN onoff) {
@@ -1173,7 +1167,7 @@ NTSTATUS asynccom_port_modem_status(_In_ struct asynccom_port *port)
 NTSTATUS asynccom_port_set_autorts(_In_ struct asynccom_port *port, BOOLEAN onoff)
 {
 	NTSTATUS status = STATUS_SUCCESS, second_status = STATUS_SUCCESS;
-	UINT32 new_efr = 0x00, old_lcr = 0;
+	UINT32 new_efr = 0x00, old_lcr = 0x00;
 
 	old_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
 	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, 0xBF);
