@@ -65,12 +65,6 @@ You have now transmitted and received data!
 
 
 ## Using The Serial Port
-
-The SerialFC driver is a slightly modified version of the Windows serial driver with support for extra features of the Fastcom asynchronous cards. Since the driver is based on the standard Windows serial driver you get to leverage the full suite of options available in the Windows [Serial Communication](http://msdn.microsoft.com/en-us/library/ff802693.aspx) API.
-
-Configuring the Fastcom specific features are documented below but we recommend studying the Windows
-[Serial Communciation API](http://msdn.microsoft.com/en-us/library/ff802693.aspx) for as it will contain the information for 99% of your code.
-
 ### Setting Baud Rate
 ##### Max Supported Speeds
 The Fastcom: Async Com has a maximum baud rate 15 Mhz, but throughput may be lower than that.
@@ -88,7 +82,7 @@ Baud Rate = Clock Rate / Sampling Rate / Integer Divisor.
 
 The 'Integer Divisor' value is determined in the driver and as long as the rest of the formula allows for an integer divisor it can be ignored.
 
-Here is an example of some values that will work. We would like a baud rate of 1 MHz so we find a combination of a clock rate of 16 MHz and a sampling rate of 16 that can be divided by an integer to end up with 1 MHz. Now if we configure these two values before using the DCB structure to specify the baud rate we will be able to achieve any supported rate we want.
+Here is an example of some values that will work. We would like a baud rate of 1 MHz so we find a combination of a clock rate of 16 MHz and a sampling rate of 16 that can be divided by an integer to end up with 1 MHz. Now if we configure these two values we will be able to achieve any supported rate we want.
 
 ```
 1,000,000 = 16,000,000 / 16 / 1
