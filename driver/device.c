@@ -63,8 +63,8 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	WDF_DEVICE_PNP_CAPABILITIES         pnpCaps;
 	WDF_IO_QUEUE_CONFIG					queue_config;
 	WDF_DEVICE_STATE					device_state;
-	WCHAR								dos_name_buffer[30], device_name_buffer[50];
-	UNICODE_STRING						dos_name, device_name;
+    WCHAR								device_name_buffer[50];//, dos_name_buffer[30];
+	UNICODE_STRING						device_name;//, dos_name;
 	struct asynccom_port				*port = 0;
 	static ULONG						instance = 0;
 	ULONG								port_num = 0;
@@ -79,7 +79,7 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	instance++;
 
 	RtlInitEmptyUnicodeString(&device_name, device_name_buffer, sizeof(device_name_buffer));
-	status = RtlUnicodeStringPrintf(&device_name, L"\\Device\\ASYNCCOM%d", port_num);
+	status = RtlUnicodeStringPrintf(&device_name, L"%ws", L"\\Device\\Serial");
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: RtlUnicodeStringPrintf failed %!STATUS!", __FUNCTION__, status);
 		return 0;
@@ -205,7 +205,7 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfDeviceCreateDeviceInterface failed  %!STATUS!\n", __FUNCTION__, status);
 		return 0;
 	}
-
+    /*
 	RtlInitEmptyUnicodeString(&dos_name, dos_name_buffer, sizeof(dos_name_buffer));
 	status = RtlUnicodeStringPrintf(&dos_name, L"\\DosDevices\\ASYNCCOM%i", port_num);
 	if (!NT_SUCCESS(status)) {
@@ -221,7 +221,7 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 		return 0;
 	}
 	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: device name %wZ!", __FUNCTION__, &dos_name);
-	
+	*/
 	
 	status = setup_spinlocks(port);
 	if (!NT_SUCCESS(status)) {
@@ -242,7 +242,7 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	}
 	
 	// To be added for COM compatibility. Currently errors.
-	//status = SerialDoExternalNaming(port);
+	status = SerialDoExternalNaming(port);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Failed to set up the COM port!  %!STATUS!", __FUNCTION__, status);
 		return 0;
@@ -785,15 +785,12 @@ NTSTATUS SerialDoExternalNaming(_In_ struct asynccom_port *port)
 
 	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "DosName is %ws\n", pRegName);
 
-	status = RtlUnicodeStringPrintf(&symbolicLinkName,
-		L"%ws%ws",
-		L"\\DosDevices\\",
-		pRegName);
-
+	status = RtlUnicodeStringPrintf(&symbolicLinkName, L"%ws%ws", L"\\DosDevices\\", pRegName);
 	if (!NT_SUCCESS(status)) {
 		goto SerialDoExternalNamingError;
 	}
 	// This fails. I have no idea why. It fails with STATUS_INVALID_DEVICE_REQUEST 0xc0000010.
+    
 	status = WdfDeviceCreateSymbolicLink(port->device, &symbolicLinkName);
 	if (!NT_SUCCESS(status)) {
 
@@ -802,7 +799,7 @@ NTSTATUS SerialDoExternalNaming(_In_ struct asynccom_port *port)
 		goto SerialDoExternalNamingError;
 
 	}
-
+    
 	port->created_symbolic_link = TRUE;
 
 	status = RtlWriteRegistryValue(RTL_REGISTRY_DEVICEMAP, SERIAL_DEVICE_MAP, port->device_name.Buffer, REG_SZ, pRegName, nameSize);
@@ -832,7 +829,7 @@ SerialDoExternalNamingError:;
 	if (stringHandle) {
 		WdfObjectDelete(stringHandle);
 	}
-
+    TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "SerialDoExternalNamingError!\n");
 	return status;
 }
 

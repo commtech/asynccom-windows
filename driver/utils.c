@@ -18,6 +18,8 @@
 */
 #include <utils.h>
 #include <port.h>
+#include <Ntstrsafe.h>
+
 
 
 UINT32 chars_to_u32(const unsigned char *data)
@@ -872,4 +874,270 @@ finished:
 	*/
 	return 0;
 
+}
+
+#define PARAMATER_NAME_LEN 80
+NTSTATUS serial_get_defaults(PSERIAL_FIRMWARE_DATA defaults_data, WDFDRIVER Driver)
+{
+    NTSTATUS status = STATUS_SUCCESS;    // return value
+    WDFKEY hKey;
+    DECLARE_UNICODE_STRING_SIZE(valueName, PARAMATER_NAME_LEN);
+
+    status = WdfDriverOpenParametersRegistryKey(Driver, STANDARD_RIGHTS_ALL, WDF_NO_OBJECT_ATTRIBUTES, &hKey);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"BreakOnEntry");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->ShouldBreakOnEntry);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->ShouldBreakOnEntry = 0;
+    }
+    status = RtlUnicodeStringPrintf(&valueName, L"DebugLevel");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->DebugLevel);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->DebugLevel = 0;
+    }
+
+
+    status = RtlUnicodeStringPrintf(&valueName, L"ForceFifoEnable");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->ForceFifoEnableDefault);
+    if (!NT_SUCCESS(status)) {
+
+        //
+        // If it isn't then write out values so that it could
+        // be adjusted later.
+        //
+        defaults_data->ForceFifoEnableDefault = SERIAL_FORCE_FIFO_DEFAULT;
+
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->ForceFifoEnableDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"RS485");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->RS485Default);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->RS485Default = SERIAL_RS485_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->RS485Default);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"SampleRate");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->SampleRateDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->SampleRateDefault = SERIAL_SAMPLE_RATE_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->SampleRateDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"RxTrigger");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->RxTriggerDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->RxTriggerDefault = SERIAL_RX_TRIGGER_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->RxTriggerDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"TxTrigger");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->TxTriggerDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->TxTriggerDefault = SERIAL_TX_TRIGGER_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->TxTriggerDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"Termination");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->TerminationDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->TerminationDefault = SERIAL_TERMINATION_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->TerminationDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"EchoCancel");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->EchoCancelDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->EchoCancelDefault = SERIAL_ECHO_CANCEL_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->EchoCancelDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"Isochronous");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->IsochronousDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->IsochronousDefault = (ULONG)SERIAL_ISOCHRONOUS_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->IsochronousDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"FrameLength");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->FrameLengthDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->FrameLengthDefault = SERIAL_FRAME_LENGTH_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->FrameLengthDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"9Bit");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->NineBitDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->NineBitDefault = SERIAL_9BIT_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->NineBitDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"FixedBaudRate");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->FixedBaudRateDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->FixedBaudRateDefault = (ULONG)SERIAL_FIXED_BAUD_RATE_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->FixedBaudRateDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"PermitShare");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->PermitShareDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->PermitShareDefault = SERIAL_PERMIT_SHARE_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->PermitShareDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+    }
+
+    status = RtlUnicodeStringPrintf(&valueName, L"LogFifo");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->LogFifoDefault);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->LogFifoDefault = SERIAL_LOG_FIFO_DEFAULT;
+        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->LogFifoDefault);
+        if (!NT_SUCCESS(status)) {
+            WdfRegistryClose(hKey);
+            return (status);
+        }
+        defaults_data->LogFifoDefault = 1;
+    }
+
+
+    status = RtlUnicodeStringPrintf(&valueName, L"UartRemovalDetect");
+    if (!NT_SUCCESS(status)) {
+        WdfRegistryClose(hKey);
+        return (status);
+    }
+
+    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->UartRemovalDetect);
+    if (!NT_SUCCESS(status)) {
+        defaults_data->UartRemovalDetect = 0;
+    }
+
+
+    WdfRegistryClose(hKey);
+    return (status);
 }

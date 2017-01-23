@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{B0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Driver", "Driver", "{3F543635-FF30-4B88-B55C-1C74FC3BF793}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asynccom", "driver\synccom.vcxproj", "{5A1B3836-9A4A-43A0-85CC-96F7E1F1F063}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asynccom", "driver\asynccom.vcxproj", "{5A1B3836-9A4A-43A0-85CC-96F7E1F1F063}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{4665CB92-2F38-425C-AE13-E2F64CE216A2}"
 EndProject

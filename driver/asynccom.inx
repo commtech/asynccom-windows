@@ -18,11 +18,10 @@
 ;
 ;
 
-; ================= Version section ===========================
 [Version]
 Signature="$WINDOWS NT$"
-Class=CommtechUSB
-ClassGuid={E85C65CC-B33B-40D4-815E-3657C2D05017}
+Class=Ports
+ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
 Provider=%ManufacturerName%
 CatalogFile=asynccom.cat
 
@@ -31,26 +30,13 @@ CatalogFile=asynccom.cat
 
 [SourceDisksFiles]
 asynccom.sys = 1,,""
-; ================= Class section =====================
 
-[ClassInstall32]
-Addreg=AsyncComClass_AddReg
-
-[AsyncComClass_AddReg]
-HKR,,,0,%ClassName%
-HKR,,Icon,,-10
-
-[DestinationDirs]
-asynccom.Files.Ext = 10,System32\Drivers
-
-[ControlFlags]
-ExcludeFromSelect = *
-
-; ================== Manufacturer/Models sections ==============
+; ================= Device section =====================
 
 [Manufacturer]
-%ManufacturerName=asynccom,NT,NTx86,NTamd64,NTia64
+%ManufacturerName%=asynccom,NT,NTx86,NTamd64
 
+; For Win2K
 [asynccom.NT]
 %AsyncCom.DeviceDesc%=asynccom_install, USB\VID_18f7&PID_0031
 
@@ -60,7 +46,7 @@ ExcludeFromSelect = *
 [asynccom.NTamd64]
 %AsyncCom.DeviceDesc%=asynccom_install, USB\VID_18f7&PID_0031
 
-; ================= Install section =====================
+; ================ Install section ======================
 
 [asynccom_install.NT]
 CopyFiles=asynccom_install.Files.Ext
@@ -87,18 +73,15 @@ AddReg=asynccom_install.AddReg.Guid
 AddService = asynccom,%SPSVCINST_ASSOCSERVICE%,asynccom_install.AddService
 
 [asynccom_install.NTx86.Services]
-Addservice = asynccom,%SPSVCINST_ASSOCSERVICE%,asynccom_install.AddService
+AddService = asynccom,%SPSVCINST_ASSOCSERVICE%,asynccom_install.AddService
 
 [asynccom_install.NTamd64.Services]
-Addservice = asynccom,%SPSVCINST_ASSOCSERVICE%,asynccom_install.AddService
+AddService = asynccom,%SPSVCINST_ASSOCSERVICE%,asynccom_install.AddService
 
 [asynccom_install.AddReg]
-HKR,,DriverBase,,asynccom.sys
-HKR,"Parameters","MaximumTransferSize",0x10001,4096
-HKR,"Parameters","DebugLevel",0x10001,2
-HKR,,FriendlyName,,%asynccom_Description%
-;HKR,,PortSubClass,1,01
-;HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+HKR,,PortSubClass,1,01
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+
 
 [asynccom_install.AddService]
 DisplayName    = %asynccom.SvcDesc%
@@ -126,10 +109,11 @@ DefaultDestDir = 12
 ;---------------------------------------------------------------;
 
 [Strings]
-ManufacturerName="Commtech, Inc."
+ManufacturerName = "Commtech, Inc."
 Disk_Description="Async Com Installation Disk"
 AsyncCom.DeviceDesc="Async Com Communications Port"
 asynccom.SvcDesc="Async Com Service"
-ClassName="Commtech USB Devices"
+ClassName       = "Commtech USB Devices"
 SPSVCINST_ASSOCSERVICE= 0x00000002
 asynccom.GUID="{74A3CD54-4696-4B6D-9863-5A67936ED5FA}"
+commtech.GUID="{E85C65CC-B33B-40D4-815E-3657C2D05017}"

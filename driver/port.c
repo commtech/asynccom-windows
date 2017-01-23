@@ -53,7 +53,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 
 		status = WdfRequestRetrieveInputBuffer(Request, sizeof(SERIAL_BAUD_RATE), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
 			break;
 		}
 		desired_baud = ((PSERIAL_BAUD_RATE)(buffer))->BaudRate;
@@ -73,7 +73,6 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 	}
 	case IOCTL_SERIAL_GET_BAUD_RATE: { 
 		PSERIAL_BAUD_RATE baud_rate;
-
 		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(SERIAL_BAUD_RATE), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
 			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
@@ -114,8 +113,9 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 	}
 	case IOCTL_SERIAL_SET_LINE_CONTROL: { 
 		PSERIAL_LINE_CONTROL line_control;
-		unsigned char line_data = 0, line_stop = 0, line_parity = 0;
+        unsigned char line_data = 0, line_stop = 0, line_parity = 0;
 		unsigned char mask = 0xff;
+        UINT32 new_lcr = 0, current_lcr = 0;
 
 		status = WdfRequestRetrieveInputBuffer(Request, sizeof(SERIAL_LINE_CONTROL), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status))
@@ -127,21 +127,25 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		switch (line_control->WordLength) {
 		case 5: {
 			line_data = SERIAL_5_DATA;
+            new_lcr |= 0x00;
 			mask = 0x1f;
 			break;
 		}
 		case 6: {
 			line_data = SERIAL_6_DATA;
+            new_lcr |= 0x01;
 			mask = 0x3f;
 			break;
 		}
 		case 7: {
 			line_data = SERIAL_7_DATA;
+            new_lcr |= 0x02;
 			mask = 0x7f;
 			break;
 		}
 		case 8: {
 			line_data = SERIAL_8_DATA;
+            new_lcr |= 0x03;
 			break;
 		}
 		default: {
@@ -150,30 +154,34 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		}
 		}
 		if (status == STATUS_INVALID_PARAMETER) break;
-		port->WmiCommData.BitsPerByte = line_control->WordLength;
 
 		switch (line_control->Parity)
 		{
 		case NO_PARITY: {
-			port->WmiCommData.Parity = SERIAL_WMI_PARITY_NONE;
 			line_parity = SERIAL_NONE_PARITY;
+            new_lcr |= 0x00;
 			break;
 		}
 		case EVEN_PARITY: {
-			port->WmiCommData.Parity = SERIAL_WMI_PARITY_EVEN;
 			line_parity = SERIAL_EVEN_PARITY;
+            new_lcr |= 0x18;
 			break;
 		}
 		case ODD_PARITY: {
-			port->WmiCommData.Parity = SERIAL_WMI_PARITY_ODD;
 			line_parity = SERIAL_ODD_PARITY;
+            new_lcr |= 0x08;
 			break;
 		}
 		case MARK_PARITY: {
-			port->WmiCommData.Parity = SERIAL_WMI_PARITY_MARK;
 			line_parity = SERIAL_MARK_PARITY;
+            new_lcr |= 0x28;
 			break;
 		}
+        case SPACE_PARITY: {
+            line_parity = SERIAL_SPACE_PARITY;
+            new_lcr |= 0x38;
+            break;
+        }
 		default: {
 			status = STATUS_INVALID_PARAMETER;
 			break;
@@ -183,8 +191,8 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 
 		switch (line_control->StopBits) {
 		case STOP_BIT_1: {
-			port->WmiCommData.StopBits = SERIAL_WMI_STOP_1;
 			line_stop = SERIAL_1_STOP;
+            new_lcr |= 0x00;
 			break;
 		}
 		case STOP_BITS_1_5: {
@@ -192,8 +200,8 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 				status = STATUS_INVALID_PARAMETER;
 				break;
 			}
-			port->WmiCommData.StopBits = SERIAL_WMI_STOP_1_5;
 			line_stop = SERIAL_1_5_STOP;
+            new_lcr |= 0x04;
 			break;
 		}
 		case STOP_BITS_2: {
@@ -201,8 +209,8 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 				status = STATUS_INVALID_PARAMETER;
 				break;
 			}
-			port->WmiCommData.StopBits = SERIAL_WMI_STOP_2;
 			line_stop = SERIAL_2_STOP;
+            new_lcr |= 0x04;
 			break;
 		}
 		default: {
@@ -212,64 +220,52 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		}
 		port->line_control = (unsigned char)((port->line_control & SERIAL_LCR_BREAK) | (line_data | line_parity | line_stop));
 		port->valid_data_mask = mask;
-		// TODO: Set the LCR for real. Reference: SerialSetLineControl.
+        current_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
+        current_lcr &= 0xc0;
+        new_lcr |= current_lcr;
+        status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, new_lcr);
 		break; 
 	}
 	case IOCTL_SERIAL_GET_LINE_CONTROL: {
 		PSERIAL_LINE_CONTROL line_control;
+        UINT32 current_lcr = 0;
 
 		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(SERIAL_LINE_CONTROL), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
 			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
 			break;
 		}
-
 		line_control = (PSERIAL_LINE_CONTROL)buffer;
 		RtlZeroMemory(buffer, OutputBufferLength);
 
-		if ((port->line_control & SERIAL_DATA_MASK) == SERIAL_5_DATA) {
-			line_control->WordLength = 5;
-		}
-		else if ((port->line_control & SERIAL_DATA_MASK) == SERIAL_6_DATA) {
-			line_control->WordLength = 6;
-		}
-		else if ((port->line_control & SERIAL_DATA_MASK) == SERIAL_7_DATA) {
-			line_control->WordLength = 7;
-		}
-		else if ((port->line_control & SERIAL_DATA_MASK) == SERIAL_8_DATA) {
-			line_control->WordLength = 8;
-		}
+        current_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
 
-		if ((port->line_control & SERIAL_PARITY_MASK) == SERIAL_NONE_PARITY) {
-			line_control->WordLength = 5;
-		}
-		else if ((port->line_control & SERIAL_PARITY_MASK) == SERIAL_ODD_PARITY) {
-			line_control->WordLength = 6;
-		}
-		else if ((port->line_control & SERIAL_PARITY_MASK) == SERIAL_EVEN_PARITY) {
-			line_control->WordLength = 7;
-		}
-		else if ((port->line_control & SERIAL_PARITY_MASK) == SERIAL_MARK_PARITY) {
-			line_control->WordLength = 8;
-		}
-		else if ((port->line_control & SERIAL_PARITY_MASK) == SERIAL_SPACE_PARITY) {
-			line_control->WordLength = 8;
-		}
+        if ((current_lcr & 0x03) == 0x03) line_control->WordLength = 8;
+        else if ((current_lcr & 0x03) == 0x02) line_control->WordLength = 7;
+        else if ((current_lcr & 0x03) == 0x01) line_control->WordLength = 6;
+        else line_control->WordLength = 5;
 
-		if (port->line_control & SERIAL_2_STOP) {
-			if (line_control->WordLength == 5)  line_control->StopBits = STOP_BITS_1_5;
-			else line_control->StopBits = STOP_BITS_2;
-		}
-		else line_control->StopBits = STOP_BIT_1; 
+        if ((current_lcr & 0x38) == 0x38) line_control->Parity = SPACE_PARITY;
+        else if ((current_lcr & 0x38) == 0x28) line_control->Parity = MARK_PARITY;
+        else if ((current_lcr & 0x38) == 0x18) line_control->Parity = EVEN_PARITY;
+        else if ((current_lcr & 0x38) == 0x08) line_control->Parity = ODD_PARITY;
+        else line_control->Parity = NO_PARITY;
+
+        if ((current_lcr & 0x04) == 0x04) {
+            if (line_control->WordLength == 5) line_control->StopBits = STOP_BITS_1_5;
+            else line_control->StopBits = STOP_BITS_2;
+        }
+        else line_control->StopBits = STOP_BIT_1;
+
 		bytes_returned = sizeof(line_control);
 		break; 
 	}
 	case IOCTL_SERIAL_SET_TIMEOUTS: { 
 		PSERIAL_TIMEOUTS new_timeouts;
 
-		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(SERIAL_TIMEOUTS), &buffer, &buffer_size);
+		status = WdfRequestRetrieveInputBuffer(Request, sizeof(SERIAL_TIMEOUTS), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_SET_TIMEOUTS: WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
 			break;
 		}
 		new_timeouts = (PSERIAL_TIMEOUTS)buffer;
@@ -290,7 +286,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 	case IOCTL_SERIAL_GET_TIMEOUTS: { 
 		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(SERIAL_TIMEOUTS), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_GET_TIMEOUTS: WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
 			break;
 		}
 		*((PSERIAL_TIMEOUTS)buffer) = port->timeouts;
@@ -300,9 +296,9 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 	case IOCTL_SERIAL_SET_CHARS: {
 		PSERIAL_CHARS NewChars;
 
-		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
+		status = WdfRequestRetrieveInputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_SET_CHARS: WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
 			break;
 		}
 		NewChars = (PSERIAL_CHARS)buffer;
@@ -312,8 +308,6 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 				break;
 			}
 		}
-		port->WmiCommData.XonCharacter = NewChars->XonChar;
-		port->WmiCommData.XoffCharacter = NewChars->XoffChar;
 		port->special_chars = *NewChars;
 		// TODO: Add 'chars' using SerialSetChars?
 		break;
@@ -322,7 +316,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 
 		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(SERIAL_CHARS), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Could not get request memory buffer %X\n", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_GET_CHARS: Could not get request memory buffer %X\n", status);
 			break;
 		}
 
@@ -378,14 +372,24 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 	}								
 	case IOCTL_SERIAL_SET_QUEUE_SIZE: { status = STATUS_NOT_SUPPORTED; break; } // TODO: This appears to be basically just a memory cap value.
 	case IOCTL_SERIAL_GET_WAIT_MASK: { status = STATUS_NOT_SUPPORTED; break; } // We don't use the ISR, so this has no value.
-	case IOCTL_SERIAL_SET_WAIT_MASK: { status = STATUS_NOT_SUPPORTED; 	break; } // We don't use the ISR, so this has no value.
-	case IOCTL_SERIAL_WAIT_ON_MASK: { status = STATUS_NOT_SUPPORTED; 	break; } // We don't use the ISR, so this has no value.
-	case IOCTL_SERIAL_IMMEDIATE_CHAR: { status = STATUS_NOT_SUPPORTED; 	break; } // We may be able to implement this - but currently we send every request directly to the Asynccom. This has no current valuable implementation.
-	case IOCTL_SERIAL_PURGE: { status = STATUS_NOT_SUPPORTED; 	break; }
+	case IOCTL_SERIAL_SET_WAIT_MASK: { status = STATUS_NOT_SUPPORTED; break; } // We don't use the ISR, so this has no value.
+	case IOCTL_SERIAL_WAIT_ON_MASK: { status = STATUS_NOT_SUPPORTED; break; } // We don't use the ISR, so this has no value.
+	case IOCTL_SERIAL_IMMEDIATE_CHAR: { status = STATUS_NOT_SUPPORTED; break; } // We may be able to implement this - but currently we send every request directly to the Asynccom. This has no current valuable implementation.
+    case IOCTL_SERIAL_PURGE: {
+        ULONG mask;
+        status = WdfRequestRetrieveInputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
+        if (!NT_SUCCESS(status)) {
+            TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
+            break;
+        }
+        mask = (ULONG)buffer;
+        asynccom_port_purge(port, mask);	
+        break; 
+    }
 	case IOCTL_SERIAL_GET_HANDFLOW: { 
 		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_GET_HANDFLOW: WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
 			break;
 		}
 		*((PSERIAL_HANDFLOW)buffer) = port->HandFlow;
@@ -393,12 +397,11 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		break; 
 	}
 	case IOCTL_SERIAL_SET_HANDFLOW: {
-		//SERIAL_IOCTL_SYNC S;
 		PSERIAL_HANDFLOW handflow;
 		
 		status = WdfRequestRetrieveInputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_SET_HANDFLOW :WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
 			break;
 		}
 		handflow = (PSERIAL_HANDFLOW)buffer;
@@ -406,7 +409,18 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 
 		break;
 	}
-	case IOCTL_SERIAL_GET_MODEMSTATUS: { status = STATUS_NOT_SUPPORTED; 	break; } // ISR like values. May be implemented later.
+    case IOCTL_SERIAL_GET_MODEMSTATUS: {
+        
+        status = WdfRequestRetrieveOutputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
+        if (!NT_SUCCESS(status)) {
+            TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_GET_MODEMSTATUS: WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+            break;
+        }
+        *(PULONG)buffer = asynccom_port_modem_status(port);
+        bytes_returned = sizeof(ULONG);
+        
+        break;
+    } 
 	case IOCTL_SERIAL_GET_DTRRTS: {
 		ULONG modem_control = 0;
 	
@@ -420,23 +434,32 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		bytes_returned = sizeof(ULONG);
 		break;
 	}
-	case IOCTL_SERIAL_GET_COMMSTATUS: { status = STATUS_NOT_SUPPORTED; 	break; } // To be implemented - may need support of IMMEDIATE_CHAR.
+	case IOCTL_SERIAL_GET_COMMSTATUS: { 
+        status = WdfRequestRetrieveOutputBuffer(Request, sizeof(SERIAL_STATUS), &buffer, &buffer_size);
+        if (!NT_SUCCESS(status)) {
+            TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_GET_COMMSTATUS: WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+            break;
+        }
+        status = asynccom_port_get_status(port, buffer);
+        bytes_returned = sizeof(SERIAL_STATUS);
+        break; 
+    } 
 	case IOCTL_SERIAL_GET_PROPERTIES: { 
 		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(SERIAL_COMMPROP), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_GET_PROPERTIES: WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
 			break;
 		}
 		status = asynccom_port_get_properties(port, buffer);
 		bytes_returned = sizeof(SERIAL_COMMPROP);
 		break; 
 	}
-	case IOCTL_SERIAL_XOFF_COUNTER: { status = STATUS_NOT_SUPPORTED; 	break; }
-	case IOCTL_SERIAL_LSRMST_INSERT: { status = STATUS_NOT_SUPPORTED; 	break; }
+	case IOCTL_SERIAL_XOFF_COUNTER: { status = STATUS_NOT_SUPPORTED; break; }
+	case IOCTL_SERIAL_LSRMST_INSERT: { status = STATUS_NOT_SUPPORTED; break; }
 	case IOCTL_SERIAL_CONFIG_SIZE: { 
 		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_CONFIG_SIZE: WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
 			break;
 		} 
 		
@@ -448,12 +471,11 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 	case IOCTL_SERIAL_GET_STATS: { 
 		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(SERIALPERF_STATS), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
-			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_GET_STATS: WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
 			break;
 		}
 		bytes_returned = sizeof(SERIALPERF_STATS);
 		RtlZeroMemory(buffer, sizeof(SERIALPERF_STATS));
-		status = STATUS_SUCCESS;
 		break; 
 	}
 	case IOCTL_SERIAL_CLEAR_STATS: { 
@@ -701,6 +723,28 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
     TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "%s: Exiting.", __FUNCTION__);
 
     return;
+}
+
+NTSTATUS asynccom_port_get_status(_In_ struct asynccom_port *port, PSERIAL_STATUS settings)
+{
+    RtlZeroMemory(settings, sizeof(SERIAL_STATUS));
+    settings->Errors = 0;
+    settings->EofReceived = 0;
+    settings->AmountInInQueue = asynccom_port_get_input_memory_usage(port);
+    settings->AmountInOutQueue = 0;
+    settings->HoldReasons = 0;
+    if (port->TXHolding) {
+        if (port->TXHolding & SERIAL_TX_CTS) settings->HoldReasons |= SERIAL_TX_WAITING_FOR_CTS;
+        if (port->TXHolding & SERIAL_TX_DSR) settings->HoldReasons |= SERIAL_TX_WAITING_FOR_DSR;
+        if (port->TXHolding & SERIAL_TX_DCD) settings->HoldReasons |= SERIAL_TX_WAITING_FOR_DCD;
+        if (port->TXHolding & SERIAL_TX_XOFF) settings->HoldReasons |= SERIAL_TX_WAITING_FOR_XON;
+        if (port->TXHolding & SERIAL_TX_BREAK) settings->HoldReasons |= SERIAL_TX_WAITING_ON_BREAK;
+    }
+
+    if (port->RXHolding & SERIAL_RX_DSR) settings->HoldReasons |= SERIAL_RX_WAITING_FOR_DSR;
+    if (port->RXHolding & SERIAL_RX_XOFF) settings->HoldReasons |= SERIAL_TX_WAITING_XOFF_SENT;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS asynccom_port_set_divisor(_In_ struct asynccom_port *port, unsigned short divisor)
@@ -1101,36 +1145,36 @@ NTSTATUS asynccom_port_set_break(_In_ struct asynccom_port *port, BOOLEAN onoff)
 	return status;
 }
 
-NTSTATUS asynccom_port_modem_status(_In_ struct asynccom_port *port)
+ULONG asynccom_port_modem_status(_In_ struct asynccom_port *port)
 {
-	NTSTATUS status = STATUS_SUCCESS;
 	UINT32 modem_status = 0x00;
 	unsigned long current_tx_holding = port->TXHolding;
 
 
 	modem_status = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MSR_OFFSET);
 	
+    // Because we don't get the modem status passively (no interrupts) the next
+    // section is ultimately useless. It would only happen when it's actively
+    // read by the user, which means the user knowns.
+    /*
 	if (port->escape_char) {
 		if (modem_status & (SERIAL_MSR_DCTS |
 			SERIAL_MSR_DDSR |
 			SERIAL_MSR_TERI |
 			SERIAL_MSR_DDCD)) {
+            // This puts the modem_status character into the data stream.
 			// serialputchar escape char
 			// serialputchar serial_lsrmst_mst
 			// serialputchar modem_status
 		}
 	}
+    */
 	if (port->HandFlow.ControlHandShake & SERIAL_DSR_SENSITIVITY) {
 		if (modem_status & SERIAL_MSR_DSR)  port->RXHolding &= ~SERIAL_RX_DSR;
 		else port->RXHolding |= SERIAL_RX_DSR;
 	}
 	else port->RXHolding &= ~SERIAL_RX_DSR;
 
-	if (port->HandFlow.ControlHandShake & SERIAL_OUT_HANDSHAKEMASK) {
-		if (port->HandFlow.ControlHandShake & SERIAL_CTS_HANDSHAKE) {
-			//if(modem_status)
-		}
-	}
 	// ISR wait mask stuff
 
 	if (port->HandFlow.ControlHandShake & SERIAL_OUT_HANDSHAKEMASK) {
@@ -1161,7 +1205,7 @@ NTSTATUS asynccom_port_modem_status(_In_ struct asynccom_port *port)
 		*/
 		
 	}
-	return status;
+	return (ULONG)modem_status;
 }
 
 NTSTATUS asynccom_port_set_autorts(_In_ struct asynccom_port *port, BOOLEAN onoff)

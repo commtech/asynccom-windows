@@ -16,7 +16,7 @@ The Windows [`CreateFile`](http://msdn.microsoft.com/en-us/library/windows/deskt
 
 HANDLE h;
 
-h = CreateFile("\\\\.\\ASYNCCOM0", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+h = CreateFile("\\\\.\\COM3", GENERIC_READ | GENERIC_WRITE, 0, NULL,
                OPEN_EXISTING, 0, NULL);
 ```
 

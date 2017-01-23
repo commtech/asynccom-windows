@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 		printf("Usage:\n\t%s [port number] [firmware file]\n", argv[0]);
 		return EXIT_FAILURE;
 	}
-	sprintf_s(handle_string, 20, "\\\\.\\ASYNCCOM%d", atoi(argv[1]));
+	sprintf_s(handle_string, 20, "\\\\.\\COM%d", atoi(argv[1]));
 	/* Open port in a blocking IO mode */
 	h = CreateFileA(handle_string, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (h == INVALID_HANDLE_VALUE) {

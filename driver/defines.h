@@ -142,6 +142,32 @@ DEFINE_GUID(GUID_DEVINTERFACE_ASYNCCOM, 0x36fc9e60, 0xc465, 0x11cf, 0x80, 0x56, 
 #define FLUSH_COMMAND 0x00000010
 
 
+typedef struct _SERIAL_FIRMWARE_DATA {
+    PDRIVER_OBJECT  DriverObject;
+    ULONG           ControllersFound;
+    ULONG           ForceFifoEnableDefault;
+    ULONG           DebugLevel;
+    ULONG           ShouldBreakOnEntry;
+    ULONG           RS485Default;
+    ULONG           SampleRateDefault;
+    ULONG           RxTriggerDefault;
+    ULONG           TxTriggerDefault;
+    ULONG           TerminationDefault;
+    ULONG           EchoCancelDefault;
+    ULONG           IsochronousDefault;
+    ULONG           FrameLengthDefault;
+    ULONG           NineBitDefault;
+    ULONG           FixedBaudRateDefault;
+    ULONG           PermitShareDefault;
+    ULONG           PermitSystemWideShare;
+    ULONG           LogFifoDefault;
+    ULONG           UartRemovalDetect;
+    UNICODE_STRING  Directory;
+    UNICODE_STRING  NtNameSuffix;
+    UNICODE_STRING  DirectorySymbolicName;
+    LIST_ENTRY      ConfigList;
+} SERIAL_FIRMWARE_DATA, *PSERIAL_FIRMWARE_DATA;
+
 
 //
 // These defines are used to set the line control register.
@@ -202,7 +228,20 @@ DEFINE_GUID(GUID_DEVINTERFACE_ASYNCCOM, 0x36fc9e60, 0xc465, 0x11cf, 0x80, 0x56, 
 #define SERIAL_MSR_RI       0x40
 #define SERIAL_MSR_DCD      0x80
 
-
+#define SERIAL_UNINITIALIZED_DEFAULT    1234567
+#define SERIAL_FORCE_FIFO_DEFAULT       1
+#define SERIAL_RS485_DEFAULT            0
+#define SERIAL_SAMPLE_RATE_DEFAULT      16
+#define SERIAL_RX_TRIGGER_DEFAULT       32
+#define SERIAL_TX_TRIGGER_DEFAULT       32
+#define SERIAL_TERMINATION_DEFAULT      1
+#define SERIAL_ECHO_CANCEL_DEFAULT      0
+#define SERIAL_ISOCHRONOUS_DEFAULT      -1
+#define SERIAL_FRAME_LENGTH_DEFAULT     1
+#define SERIAL_9BIT_DEFAULT             0
+#define SERIAL_FIXED_BAUD_RATE_DEFAULT -1
+#define SERIAL_PERMIT_SHARE_DEFAULT     0
+#define SERIAL_LOG_FIFO_DEFAULT         0
 
 #define RFE		0x00000004
 #define RFT		0x00000002
@@ -293,10 +332,6 @@ typedef struct asynccom_port {
 	ULONG							RXHolding;
 	ULONG							buffer_size; //Is this necessary?
 
-												 //
-												 // WMI Comm Data
-												 //
-	SERIAL_WMI_COMM_DATA WmiCommData;
 	SERIAL_HANDFLOW HandFlow;
 
 } ASYNCCOM_PORT, *PASYNCCOM_PORT;

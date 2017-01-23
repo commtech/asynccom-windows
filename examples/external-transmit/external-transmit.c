@@ -11,7 +11,7 @@ int main(void)
 	unsigned num_chars = 0;
 
 	/* Open port 0 in a blocking IO mode */
-	h = CreateFile(L"\\\\.\\ASYNCCOM0", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	h = CreateFile(L"\\\\.\\COM8", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (h == INVALID_HANDLE_VALUE) {
 		fprintf(stderr, "CreateFile failed with %d\n", GetLastError());
 		return EXIT_FAILURE;

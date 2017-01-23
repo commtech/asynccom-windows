@@ -63,7 +63,6 @@ VOID OsrFxEvtDriverContextCleanup(WDFOBJECT Driver)
 
     TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT,  "%s: Entering.\n", __FUNCTION__);
 
-    //WPP_CLEANUP( WdfDriverWdmGetDriverObject(Driver));
 	WPP_CLEANUP(NULL);
     UNREFERENCED_PARAMETER(Driver);
 	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT, "%s: Exiting.\n", __FUNCTION__);

@@ -6,20 +6,29 @@
 
 int loop_test(HANDLE h, int bytes_to_read);
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	HANDLE h = 0;
-	DWORD tmp;
-	SERIAL_BAUD_RATE baud_rate;
+    DCB mdcb;
+    BOOL success;
 	int failures = 0, num_bytes = 10000;
 	ULONG mask = 0;
+    unsigned char handle_string[20];
 
-	/* Open port 0 in a blocking IO mode */
-	h = CreateFile(L"\\\\.\\ASYNCCOM0", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-	if (h == INVALID_HANDLE_VALUE) {
-		fprintf(stderr, "CreateFile failed with %d\n", GetLastError());
-		return EXIT_FAILURE;
-	}
+    if (argc != 2)
+    {
+        printf("Usage:\n\t%s [COM port number]\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    /* Open port 0 in a blocking IO mode */
+    sprintf_s(handle_string, 20, "\\\\.\\COM%d", atoi(argv[1]));
+    h = CreateFileA(handle_string, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (h == INVALID_HANDLE_VALUE) {
+        fprintf(stderr, "CreateFile failed with %d\n", GetLastError());
+        CloseHandle(h);
+        return EXIT_FAILURE;
+    }
 	// Here is an example of setup.
 	// Basically the drivers calculate an 'additional divisor' to use to get a baud rate. The formula for baud rate is
 	// baud_rate = clock_rate / (sample_rate * additional_divisor)
@@ -35,24 +44,56 @@ int main(void)
 	// This means the 'additional divisor' is 1.
 	// You could also set the additional divisor directly by using ASYNCCOM_SET_DIVISOR.
 
-	baud_rate.BaudRate = 115200;
-	DeviceIoControl(h, IOCTL_SERIAL_SET_BAUD_RATE, &baud_rate, sizeof(baud_rate), NULL, 0, &tmp, NULL);
+    memset(&mdcb, 0, sizeof(mdcb));
+    mdcb.DCBlength = sizeof(mdcb);
+    success = GetCommState(h, &mdcb);
+    if (!success)
+    {
+        printf("GetCommState failed! %d\n", GetLastError());
+        return EXIT_FAILURE;
+    }
+
+    mdcb.BaudRate = 115200;
+    mdcb.ByteSize = 8;
+    mdcb.Parity = NOPARITY;
+    mdcb.StopBits = ONESTOPBIT;
+    if (SetCommState(h, &mdcb) == FALSE) {
+        fprintf(stderr, "SetCommState failed with %d\n", GetLastError());
+        return EXIT_FAILURE;
+    }
+    PurgeComm(h, PURGE_TXCLEAR | PURGE_RXCLEAR);
+    Sleep(1000);
+    printf("Testing at 115.2k baud...");
 	failures = loop_test(h, num_bytes);
-	mask = SERIAL_PURGE_TXABORT | SERIAL_PURGE_RXABORT | SERIAL_PURGE_RXCLEAR;
-	DeviceIoControl(h, IOCTL_SERIAL_PURGE, &mask, sizeof(mask), NULL, 0, &tmp, NULL);
-	printf("115.2k test (%d bytes): %d failures\n",num_bytes, failures);
+	printf("complete (%d bytes): %d failures\n\n",num_bytes, failures);
 	Sleep(1000);
 
 	// In this case, the formula is:
 	// 9600 = 1843200 / 16 / 12
 	// This means the 'additional divisor' is 12.
 
-	baud_rate.BaudRate = 9600;
-	DeviceIoControl(h, IOCTL_SERIAL_SET_BAUD_RATE, &baud_rate, sizeof(baud_rate), NULL, 0, &tmp, NULL);
+    memset(&mdcb, 0, sizeof(mdcb));
+    mdcb.DCBlength = sizeof(mdcb);
+    success = GetCommState(h, &mdcb);
+    if (!success)
+    {
+        printf("GetCommState failed! %d\n", GetLastError());
+        return EXIT_FAILURE;
+    }
+
+    mdcb.BaudRate = 9600;
+    mdcb.ByteSize = 8;
+    mdcb.Parity = NOPARITY;
+    mdcb.StopBits = ONESTOPBIT;
+    if (SetCommState(h, &mdcb) == FALSE) {
+        fprintf(stderr, "SetCommState failed with %d\n", GetLastError());
+        return EXIT_FAILURE;
+    }
+    PurgeComm(h, PURGE_TXCLEAR | PURGE_RXCLEAR);
+    Sleep(1000);
+    printf("Testing at 9.6k baud...");
 	failures = loop_test(h, num_bytes);
-	mask = SERIAL_PURGE_TXABORT | SERIAL_PURGE_RXABORT | SERIAL_PURGE_RXCLEAR;
-	DeviceIoControl(h, IOCTL_SERIAL_PURGE, &mask, sizeof(mask), NULL, 0, &tmp, NULL);
-	printf("9.6k test (%d bytes):   %d failures\n", num_bytes, failures);
+	printf("complete (%d bytes):   %d failures\n", num_bytes, failures);
 
 	CloseHandle(h);
 
@@ -72,7 +113,7 @@ int loop_test(HANDLE h, int bytes_to_read)
 		// You could do a frame larger than this - but this is the biggest FIFO size.
 		data_size = rand() % 128;
 		if (data_size > MAX_BUFFER) data_size = MAX_BUFFER;
-		for (i = 0; i < data_size; i++) odata[i] = rand() % 255;
+        for (i = 0; i < data_size; i++) odata[i] = rand() % 255;
 
 		return_value = WriteFile(h, odata, data_size, &data_written, NULL);
 		if (return_value != 1) { printf("write_status: %d\n", return_value); total_errors++; }

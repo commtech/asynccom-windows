@@ -81,5 +81,7 @@ NTSTATUS			asynccom_port_set_isochronous(_In_ struct asynccom_port *port, int mo
 NTSTATUS			asynccom_port_set_break(_In_ struct asynccom_port *port, BOOLEAN onoff);
 NTSTATUS			asynccom_port_program_firmware(_In_ struct asynccom_port *port, unsigned char *firmware_line, size_t data_size);
 void				asynccom_port_set_clock_bits(_In_ struct asynccom_port *port, unsigned char *clock_data);
+NTSTATUS            asynccom_port_get_status(_In_ struct asynccom_port *port, PSERIAL_STATUS settings);
+ULONG               asynccom_port_modem_status(_In_ struct asynccom_port *port);
 
 #endif
