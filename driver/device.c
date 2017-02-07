@@ -63,8 +63,6 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	WDF_DEVICE_PNP_CAPABILITIES         pnpCaps;
 	WDF_IO_QUEUE_CONFIG					queue_config;
 	WDF_DEVICE_STATE					device_state;
-    WCHAR								device_name_buffer[50];//, dos_name_buffer[30];
-	UNICODE_STRING						device_name;//, dos_name;
 	struct asynccom_port				*port = 0;
 	static ULONG						instance = 0;
 	ULONG								port_num = 0;
@@ -72,14 +70,14 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	UNREFERENCED_PARAMETER(Driver);
 	UNREFERENCED_PARAMETER(DeviceInit);
 	PAGED_CODE();
+    DECLARE_UNICODE_STRING_SIZE(device_name, DEVICE_OBJECT_NAME_LENGTH);
 
 	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT, "%s: Entering.\n", __FUNCTION__);
 	
 	port_num = instance;
 	instance++;
 
-	RtlInitEmptyUnicodeString(&device_name, device_name_buffer, sizeof(device_name_buffer));
-	status = RtlUnicodeStringPrintf(&device_name, L"%ws", L"\\Device\\Serial");
+    status = RtlUnicodeStringPrintf(&device_name, L"%ws%d", L"\\Device\\ASYNCCOM", port_num);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: RtlUnicodeStringPrintf failed %!STATUS!", __FUNCTION__, status);
 		return 0;
@@ -143,7 +141,7 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	WDF_DEVICE_PNP_CAPABILITIES_INIT(&pnpCaps);
 	pnpCaps.SurpriseRemovalOK = WdfTrue;
 	pnpCaps.UniqueID = WdfTrue;
-	pnpCaps.UINumber = port_num;
+	pnpCaps.UINumber = port_num; //-1 is worth trying.
 	WdfDeviceSetPnpCapabilities(port->device, &pnpCaps);
 
 	

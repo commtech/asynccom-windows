@@ -64,6 +64,7 @@ DEFINE_GUID(GUID_DEVINTERFACE_ASYNCCOM, 0x36fc9e60, 0xc465, 0x11cf, 0x80, 0x56, 
 // read : (address - 2B) (value - 4B)
 
 #define SYNCCOM_GET_STATUS					0xFE
+#define DEVICE_OBJECT_NAME_LENGTH       128
 
 #define TX_FIFO_SIZE 128
 
