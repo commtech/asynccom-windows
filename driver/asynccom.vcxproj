@@ -570,7 +570,7 @@
     </ClCompile>
     <Inf>
       <CatalogFileName>asynccom.cat</CatalogFileName>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8Release|x64'">
@@ -581,7 +581,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -593,7 +593,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -605,7 +605,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -617,7 +617,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -629,7 +629,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -641,7 +641,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -653,7 +653,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -665,7 +665,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -677,7 +677,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -689,7 +689,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -701,7 +701,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>1.0.1</TimeStamp>
+      <TimeStamp>2.0.1</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
