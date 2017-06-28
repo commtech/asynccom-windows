@@ -26,10 +26,10 @@ Provider=%ManufacturerName%
 CatalogFile=asynccom.cat
 
 [SourceDisksNames]
-1=%asynccom_Install%,,,
+1=%Disk_Description%,,,
 
 [SourceDisksFiles]
-asynccom.sys = 1,,""
+asynccom.sys = 1
 
 ; ================= Device section =====================
 
@@ -38,13 +38,13 @@ asynccom.sys = 1,,""
 
 ; For Win2K
 [asynccom.NT]
-%AsyncCom.DeviceDesc%=asynccom_install, USB\VID_18f7&PID_0031
+%AsyncCom.DeviceDesc%=asynccom_install, USB\VID_2eb0&PID_0031
 
 [asynccom.NTx86]
-%AsyncCom.DeviceDesc%=asynccom_install, USB\VID_18f7&PID_0031
+%AsyncCom.DeviceDesc%=asynccom_install, USB\VID_2eb0&PID_0031
 
 [asynccom.NTamd64]
-%AsyncCom.DeviceDesc%=asynccom_install, USB\VID_18f7&PID_0031
+%AsyncCom.DeviceDesc%=asynccom_install, USB\VID_2eb0&PID_0031
 
 ; ================ Install section ======================
 
@@ -96,12 +96,6 @@ asynccom.sys
 
 [asynccom_install.AddReg.Guid]
 HKR,,DriverGUID,,%asynccom.GUID%
-
-[SourceDisksNames]
-1=%Disk_Description%,,,
-
-[SourceDisksFiles]
-asynccom.sys = 1
 
 [DestinationDirs]
 DefaultDestDir = 12
