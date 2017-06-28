@@ -43,6 +43,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Built %s %s\n", __DATE__, __TIME__);
 	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Copyright (c) 2016, Fastcom.");
   
+	ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
 	WDF_DRIVER_CONFIG_INIT(&config, AsyncComEvtDeviceAdd);
 
     WDF_OBJECT_ATTRIBUTES_INIT(&attributes);

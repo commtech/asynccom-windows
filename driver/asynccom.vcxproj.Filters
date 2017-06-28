@@ -54,13 +54,7 @@
     <ClCompile Include="utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bulkrwr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="device.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ioctl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="device.c">

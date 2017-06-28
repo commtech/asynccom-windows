@@ -58,91 +58,116 @@
     <Platform Condition="'$(Platform)' == ''">Win32</Platform>
     <SampleGuid>{CA5400A8-3D6E-438B-951C-93B6303794C6}</SampleGuid>
     <ProjectName>asynccom</ProjectName>
+    <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win7Release|x64'">
-    <TargetVersion>Win7</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>False</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win8Release|x64'">
-    <TargetVersion>Win8</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>False</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win8.1Release|x64'">
-    <TargetVersion>WindowsV6.3</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>False</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win7Debug|x64'">
-    <TargetVersion>Win7</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>True</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win8Debug|x64'">
-    <TargetVersion>Win8</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>True</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win8.1Debug|x64'">
-    <TargetVersion>WindowsV6.3</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>True</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win7Release|Win32'">
-    <TargetVersion>Win7</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>False</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win8Release|Win32'">
-    <TargetVersion>Win8</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>False</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win8.1Release|Win32'">
-    <TargetVersion>WindowsV6.3</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>False</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win7Debug|Win32'">
-    <TargetVersion>Win7</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>True</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win8Debug|Win32'">
-    <TargetVersion>Win8</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>True</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win8.1Debug|Win32'">
-    <TargetVersion>WindowsV6.3</TargetVersion>
+    <TargetVersion>
+    </TargetVersion>
     <UseDebugLibraries>True</UseDebugLibraries>
     <DriverType>KMDF</DriverType>
-    <PlatformToolset>WindowsKernelModeDriver8.1</PlatformToolset>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup>
@@ -278,7 +303,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc;"SDK Path\Include"</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -297,7 +322,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -316,7 +341,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -335,7 +360,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -354,7 +379,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -373,7 +398,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -392,7 +417,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -411,7 +436,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -430,7 +455,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -449,7 +474,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -468,7 +493,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -487,7 +512,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
@@ -501,6 +526,7 @@
     <ALLOW_DATE_TIME>1</ALLOW_DATE_TIME>
     <GenerateManifest>false</GenerateManifest>
     <IntDir>$(Configuration)\</IntDir>
+    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win8Release|x64'">
     <ALLOW_DATE_TIME>1</ALLOW_DATE_TIME>
@@ -531,6 +557,7 @@
     <ALLOW_DATE_TIME>1</ALLOW_DATE_TIME>
     <GenerateManifest>false</GenerateManifest>
     <IntDir>$(Configuration)\</IntDir>
+    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win8Release|Win32'">
     <ALLOW_DATE_TIME>1</ALLOW_DATE_TIME>
@@ -558,7 +585,6 @@
     <IntDir>$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemGroup>
-    <FilesToPackage Include="..\deviceMetadata\B4D697F5-1C56-4807-ACCD-B28C09D37FF0.devicemetadata-ms" />
     <None Include="..\deviceMetadata\B4D697F5-1C56-4807-ACCD-B28C09D37FF0.devicemetadata-ms" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7Release|x64'">
@@ -570,7 +596,7 @@
     </ClCompile>
     <Inf>
       <CatalogFileName>asynccom.cat</CatalogFileName>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8Release|x64'">
@@ -581,7 +607,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -593,7 +619,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -605,7 +631,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -617,7 +643,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -629,7 +655,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -641,7 +667,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -653,7 +679,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -665,7 +691,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -677,7 +703,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -689,7 +715,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -701,7 +727,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.1</TimeStamp>
+      <TimeStamp>2.0.3</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -710,7 +736,10 @@
   </ItemGroup>
   <ItemGroup>
     <Inf Exclude="@(Inf)" Include="*.inf" />
-    <FilesToPackage Include="$(TargetPath)" Condition="'$(ConfigurationType)'=='Driver' or '$(ConfigurationType)'=='DynamicLibrary'" />
+    <FilesToPackage Include="$(TargetPath)" Condition="'$(ConfigurationType)'=='Driver' or '$(ConfigurationType)'=='DynamicLibrary'">
+      <PackageRelativeDirectory>
+      </PackageRelativeDirectory>
+    </FilesToPackage>
   </ItemGroup>
   <ItemGroup>
     <None Include="*.txt" Exclude="@(None)" />
