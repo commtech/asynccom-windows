@@ -382,7 +382,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
             TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
             break;
         }
-        mask = (ULONG)buffer;
+        mask = PtrToUlong(buffer);
         asynccom_port_purge(port, mask);	
         break; 
     }
@@ -528,7 +528,8 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 	}
 	case IOCTL_ASYNCCOM_REPROGRAM: {
 		unsigned char *firmware_line = 0;
-		size_t buffer_size = 0, data_size = 0;
+		size_t data_size = 0;
+
 		status = WdfRequestRetrieveInputBuffer(Request, 1, &firmware_line, &buffer_size);
 		if (!NT_SUCCESS(status)) {
 			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputMemory failed %!STATUS!", status);
