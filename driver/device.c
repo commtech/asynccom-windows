@@ -380,7 +380,7 @@ NTSTATUS setup_queues(_In_ struct asynccom_port *port) {
     WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
     queue_config.EvtIoWrite = AsyncComEvtIoWrite;
     queue_config.EvtIoStop = AsyncComEvtIoStop;
-    queue_config.EvtIoResume = AsyncComEvtIoResume;
+    //queue_config.EvtIoResume = AsyncComEvtIoResume;
 
     status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->write_queue);
     if (!NT_SUCCESS(status)) {
@@ -396,7 +396,7 @@ NTSTATUS setup_queues(_In_ struct asynccom_port *port) {
     WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
     queue_config.EvtIoRead = AsyncComEvtIoRead;
     queue_config.EvtIoStop = AsyncComEvtIoStop;
-    queue_config.EvtIoResume = AsyncComEvtIoResume;
+    //queue_config.EvtIoResume = AsyncComEvtIoResume;
 
     status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->read_queue);
     if (!NT_SUCCESS(status)) {
