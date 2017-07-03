@@ -888,49 +888,6 @@ NTSTATUS serial_get_defaults(PSERIAL_FIRMWARE_DATA defaults_data, WDFDRIVER Driv
         return status;
     }
 
-    status = RtlUnicodeStringPrintf(&valueName, L"BreakOnEntry");
-    if (!NT_SUCCESS(status)) {
-        WdfRegistryClose(hKey);
-        return (status);
-    }
-    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->ShouldBreakOnEntry);
-    if (!NT_SUCCESS(status)) {
-        defaults_data->ShouldBreakOnEntry = 0;
-    }
-    status = RtlUnicodeStringPrintf(&valueName, L"DebugLevel");
-    if (!NT_SUCCESS(status)) {
-        WdfRegistryClose(hKey);
-        return (status);
-    }
-
-    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->DebugLevel);
-    if (!NT_SUCCESS(status)) {
-        defaults_data->DebugLevel = 0;
-    }
-
-
-    status = RtlUnicodeStringPrintf(&valueName, L"ForceFifoEnable");
-    if (!NT_SUCCESS(status)) {
-        WdfRegistryClose(hKey);
-        return (status);
-    }
-
-    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->ForceFifoEnableDefault);
-    if (!NT_SUCCESS(status)) {
-
-        //
-        // If it isn't then write out values so that it could
-        // be adjusted later.
-        //
-        defaults_data->ForceFifoEnableDefault = SERIAL_FORCE_FIFO_DEFAULT;
-
-        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->ForceFifoEnableDefault);
-        if (!NT_SUCCESS(status)) {
-            WdfRegistryClose(hKey);
-            return (status);
-        }
-    }
-
     status = RtlUnicodeStringPrintf(&valueName, L"RS485");
     if (!NT_SUCCESS(status)) {
         WdfRegistryClose(hKey);
@@ -989,22 +946,6 @@ NTSTATUS serial_get_defaults(PSERIAL_FIRMWARE_DATA defaults_data, WDFDRIVER Driv
     if (!NT_SUCCESS(status)) {
         defaults_data->TxTriggerDefault = SERIAL_TX_TRIGGER_DEFAULT;
         status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->TxTriggerDefault);
-        if (!NT_SUCCESS(status)) {
-            WdfRegistryClose(hKey);
-            return (status);
-        }
-    }
-
-    status = RtlUnicodeStringPrintf(&valueName, L"Termination");
-    if (!NT_SUCCESS(status)) {
-        WdfRegistryClose(hKey);
-        return (status);
-    }
-
-    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->TerminationDefault);
-    if (!NT_SUCCESS(status)) {
-        defaults_data->TerminationDefault = SERIAL_TERMINATION_DEFAULT;
-        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->TerminationDefault);
         if (!NT_SUCCESS(status)) {
             WdfRegistryClose(hKey);
             return (status);
@@ -1092,52 +1033,6 @@ NTSTATUS serial_get_defaults(PSERIAL_FIRMWARE_DATA defaults_data, WDFDRIVER Driv
         }
     }
 
-    status = RtlUnicodeStringPrintf(&valueName, L"PermitShare");
-    if (!NT_SUCCESS(status)) {
         WdfRegistryClose(hKey);
         return (status);
-    }
-
-    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->PermitShareDefault);
-    if (!NT_SUCCESS(status)) {
-        defaults_data->PermitShareDefault = SERIAL_PERMIT_SHARE_DEFAULT;
-        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->PermitShareDefault);
-        if (!NT_SUCCESS(status)) {
-            WdfRegistryClose(hKey);
-            return (status);
-        }
-    }
-
-    status = RtlUnicodeStringPrintf(&valueName, L"LogFifo");
-    if (!NT_SUCCESS(status)) {
-        WdfRegistryClose(hKey);
-        return (status);
-    }
-
-    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->LogFifoDefault);
-    if (!NT_SUCCESS(status)) {
-        defaults_data->LogFifoDefault = SERIAL_LOG_FIFO_DEFAULT;
-        status = WdfRegistryAssignULong(hKey, &valueName, defaults_data->LogFifoDefault);
-        if (!NT_SUCCESS(status)) {
-            WdfRegistryClose(hKey);
-            return (status);
-        }
-        defaults_data->LogFifoDefault = 1;
-    }
-
-
-    status = RtlUnicodeStringPrintf(&valueName, L"UartRemovalDetect");
-    if (!NT_SUCCESS(status)) {
-        WdfRegistryClose(hKey);
-        return (status);
-    }
-
-    status = WdfRegistryQueryULong(hKey, &valueName, &defaults_data->UartRemovalDetect);
-    if (!NT_SUCCESS(status)) {
-        defaults_data->UartRemovalDetect = 0;
-    }
-
-
-    WdfRegistryClose(hKey);
-    return (status);
 }

@@ -43,14 +43,12 @@ NTSTATUS AsyncComEvtDeviceAdd(WDFDRIVER Driver, PWDFDEVICE_INIT DeviceInit)
 
 	PAGED_CODE();
 
-	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT, "%s: Entering.\n", __FUNCTION__);
 	port = asynccom_port_new(Driver, DeviceInit);
 	if (!port)
 	{
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_INIT, "%s: Error: no valid port created!\n", __FUNCTION__);
 		return STATUS_INTERNAL_ERROR;
 	}
-	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT, "%s: Exiting.\n", __FUNCTION__);
 	return STATUS_SUCCESS;
 }
 
@@ -61,7 +59,6 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	WDF_OBJECT_ATTRIBUTES               attributes;
 	WDFDEVICE                           device;
 	WDF_DEVICE_PNP_CAPABILITIES         pnpCaps;
-	WDF_IO_QUEUE_CONFIG					queue_config;
 	WDF_DEVICE_STATE					device_state;
 	struct asynccom_port				*port = 0;
 	static ULONG						instance = 0;
@@ -71,9 +68,6 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	UNREFERENCED_PARAMETER(DeviceInit);
 	PAGED_CODE();
     DECLARE_UNICODE_STRING_SIZE(device_name, DEVICE_OBJECT_NAME_LENGTH);
-
-	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT, "%s: Entering.\n", __FUNCTION__);
-	
 	port_num = instance;
 	instance++;
 
@@ -144,66 +138,19 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	pnpCaps.UINumber = port_num; //-1 is worth trying.
 	WdfDeviceSetPnpCapabilities(port->device, &pnpCaps);
 
-	
-	WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
-	queue_config.EvtIoDeviceControl = AsyncComEvtIoDeviceControl;
-
-	__analysis_assume(queue_config.EvtIoStop != 0);
-	status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->ioctl_queue);
-	__analysis_assume(queue_config.EvtIoStop == 0);
+    status = setup_queues(port);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
-		return 0;
-	}
-	status = WdfDeviceConfigureRequestDispatching(port->device, port->ioctl_queue, WdfRequestTypeDeviceControl);
-	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfDeviceConfigureRequestDispatching failed %!STATUS!", __FUNCTION__, status);
+        TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Failed to set up queues! %!STATUS!", __FUNCTION__, status);
 		return 0;
 	}
 
-	WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
-	queue_config.EvtIoWrite = AsyncComEvtIoWrite;
-	queue_config.EvtIoStop  = AsyncComEvtIoStop;
-
-	status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->write_queue);
-	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
-		return 0;
-	}
-	status = WdfDeviceConfigureRequestDispatching(port->device, port->write_queue, WdfRequestTypeWrite);
-	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfDeviceConfigureRequestDispatching failed %!STATUS!", __FUNCTION__, status);
-		return 0;
-	}
-
-	WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
-	queue_config.EvtIoRead = AsyncComEvtIoRead;
-	queue_config.EvtIoStop = AsyncComEvtIoStop;
-
-	status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->read_queue);
-	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
-		return 0;
-	}
-	status = WdfDeviceConfigureRequestDispatching(port->device, port->read_queue, WdfRequestTypeRead);
-	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfDeviceConfigureRequestDispatching failed %!STATUS!", __FUNCTION__, status);
-		return 0;
-	}
-	
-	WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchManual);
-	status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->read_queue2);
-	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
-		return 0;
-	}
-
+    /*
 	status = WdfDeviceCreateDeviceInterface(device, (LPGUID)&GUID_DEVINTERFACE_COMPORT, NULL);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfDeviceCreateDeviceInterface failed  %!STATUS!\n", __FUNCTION__, status);
 		return 0;
 	}
-    /*
+    
 	RtlInitEmptyUnicodeString(&dos_name, dos_name_buffer, sizeof(dos_name_buffer));
 	status = RtlUnicodeStringPrintf(&dos_name, L"\\DosDevices\\ASYNCCOM%i", port_num);
 	if (!NT_SUCCESS(status)) {
@@ -310,7 +257,7 @@ NTSTATUS setup_port(_In_ struct asynccom_port *port)
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_INIT, "%s: Error: Can't set port to ASYNC!\n", __FUNCTION__);
 		return status;
 	}
-	asynccom_port_set_clock_rate(port, 1843200);
+	asynccom_port_set_clock_rate(port, 18432000);
 	if (!NT_SUCCESS(status))
 	{
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_INIT, "%s: Error: can't set clock!\n", __FUNCTION__);
@@ -326,13 +273,14 @@ NTSTATUS setup_port(_In_ struct asynccom_port *port)
 	old_efr = asynccom_port_get_650_register(port, EFR_OFFSET);
 	asynccom_port_set_650_register(port, EFR_OFFSET, old_efr | 0x10);
 	status = asynccom_port_set_sample_rate(port, 16);
-	status = asynccom_port_set_divisor(port, 1);
+	status = asynccom_port_set_divisor(port, 10);
 	asynccom_port_set_spr_register(port, ACR_OFFSET, 0x00);
 	if (!NT_SUCCESS(status))
 	{
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_INIT, "%s: Error: can't set sample rate!\n", __FUNCTION__);
 		return status;
 	}
+    port->current_baud = 18432000 / 160; // default baud 115200
 	status = asynccom_port_set_echo_cancel(port, 0);
 	if (!NT_SUCCESS(status))
 	{
@@ -409,6 +357,68 @@ NTSTATUS setup_dpc(_In_ struct asynccom_port *port)
 	return STATUS_SUCCESS;
 }
 
+NTSTATUS setup_queues(_In_ struct asynccom_port *port) {
+    NTSTATUS							status = STATUS_SUCCESS;
+    WDF_IO_QUEUE_CONFIG					queue_config;
+
+    WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
+    queue_config.EvtIoDeviceControl = AsyncComEvtIoDeviceControl;
+
+    __analysis_assume(queue_config.EvtIoStop != 0);
+    status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->ioctl_queue);
+    __analysis_assume(queue_config.EvtIoStop == 0);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
+        return status;
+    }
+    status = WdfDeviceConfigureRequestDispatching(port->device, port->ioctl_queue, WdfRequestTypeDeviceControl);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfDeviceConfigureRequestDispatching failed %!STATUS!", __FUNCTION__, status);
+        return status;
+    }
+
+    WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
+    queue_config.EvtIoWrite = AsyncComEvtIoWrite;
+    queue_config.EvtIoStop = AsyncComEvtIoStop;
+    queue_config.EvtIoResume = AsyncComEvtIoResume;
+
+    status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->write_queue);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
+        return status;
+    }
+    status = WdfDeviceConfigureRequestDispatching(port->device, port->write_queue, WdfRequestTypeWrite);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfDeviceConfigureRequestDispatching failed %!STATUS!", __FUNCTION__, status);
+        return status;
+    }
+
+    WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
+    queue_config.EvtIoRead = AsyncComEvtIoRead;
+    queue_config.EvtIoStop = AsyncComEvtIoStop;
+    queue_config.EvtIoResume = AsyncComEvtIoResume;
+
+    status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->read_queue);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
+        return status;
+    }
+    status = WdfDeviceConfigureRequestDispatching(port->device, port->read_queue, WdfRequestTypeRead);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfDeviceConfigureRequestDispatching failed %!STATUS!", __FUNCTION__, status);
+        return status;
+    }
+
+    WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchManual);
+    status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->read_queue2);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
+        return status;
+    }
+
+    return status;
+}
+
 NTSTATUS AsyncComEvtDevicePrepareHardware(WDFDEVICE Device, WDFCMRESLIST ResourceList, WDFCMRESLIST ResourceListTranslated)
 {
     NTSTATUS                            status = STATUS_SUCCESS;
@@ -423,7 +433,6 @@ NTSTATUS AsyncComEvtDevicePrepareHardware(WDFDEVICE Device, WDFCMRESLIST Resourc
 
     PAGED_CODE();
 	wait_wake_enable = FALSE;
-    TraceEvents(TRACE_LEVEL_VERBOSE, DBG_PNP, "%s: Entering.\n", __FUNCTION__);
 
 	port = GetPortContext(Device);
 	return_val_if_untrue(port, STATUS_UNSUCCESSFUL);
@@ -471,6 +480,10 @@ NTSTATUS AsyncComEvtDevicePrepareHardware(WDFDEVICE Device, WDFCMRESLIST Resourc
 	readerConfig.NumPendingReads = 1;
 	readerConfig.EvtUsbTargetPipeReadersFailed = FX3EvtReadFailed;
 	status = WdfUsbTargetPipeConfigContinuousReader(port->data_read_pipe, &readerConfig);
+	if (!NT_SUCCESS(status)) {
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfUsbTargetPipeConfigContinuousReader failed  %!STATUS!\n", __FUNCTION__, status);
+		return status;
+	}
 	
 	port->pending_oframe = 0;
 	status = setup_port(port);
@@ -482,11 +495,8 @@ NTSTATUS AsyncComEvtDevicePrepareHardware(WDFDEVICE Device, WDFCMRESLIST Resourc
 NTSTATUS AsyncComEvtDeviceReleaseHardware(WDFDEVICE Device, WDFCMRESLIST ResourcesTranslated)
 {
 	NTSTATUS status = STATUS_SUCCESS;
-	UNREFERENCED_PARAMETER(Device);
-	UNREFERENCED_PARAMETER(ResourcesTranslated);
-	
 	struct asynccom_port *port = 0;
-	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_POWER, "%s: Entering\n", __FUNCTION__);
+
 	UNREFERENCED_PARAMETER(ResourcesTranslated);
 	port = GetPortContext(Device);
 	return_val_if_untrue(port, 0);
@@ -504,7 +514,6 @@ NTSTATUS AsyncComEvtDeviceD0Entry(WDFDEVICE Device, WDF_POWER_DEVICE_STATE Previ
 	struct asynccom_port					*port = 0;
 
 	UNREFERENCED_PARAMETER(PreviousState);
-	UNREFERENCED_PARAMETER(Device);
 
 	PAGED_CODE();
 	port = GetPortContext(Device);
@@ -522,14 +531,10 @@ NTSTATUS AsyncComEvtDeviceD0Entry(WDFDEVICE Device, WDF_POWER_DEVICE_STATE Previ
 
 NTSTATUS AsyncComEvtDeviceD0Exit(WDFDEVICE Device, WDF_POWER_DEVICE_STATE TargetState)
 {
-	UNREFERENCED_PARAMETER(Device);
-	UNREFERENCED_PARAMETER(TargetState);
-	
 	struct asynccom_port *port = 0;
 	UNREFERENCED_PARAMETER(TargetState);
 	PAGED_CODE();
 	port = GetPortContext(Device);
-
 	return_val_if_untrue(port, STATUS_SUCCESS);
 	WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(port->data_read_pipe), WdfIoTargetCancelSentIo);
     TraceEvents(TRACE_LEVEL_VERBOSE, DBG_POWER, "%s: Exiting.\n", __FUNCTION__);
@@ -764,6 +769,7 @@ NTSTATUS SerialDoExternalNaming(_In_ struct asynccom_port *port)
 
 	status = WdfDeviceRetrieveDeviceName(port->device, stringHandle);
 	if (!NT_SUCCESS(status)) {
+		stringHandle = NULL;
 		goto SerialDoExternalNamingError;
 	}
 
@@ -868,27 +874,3 @@ BOOLEAN SerialGetFdoRegistryKeyValue(IN PWDFDEVICE_INIT DeviceInit, __in PCWSTR 
 
 	return retValue;
 }
-
-// This will be used to implement COM compatibility. Currently C
-/*
-NTSTATUS create_com_port(_In_ struct asynccom_port *port)
-{
-	NTSTATUS status = STATUS_SUCCESS;
-	UNICODE_STRING com_name;
-	WCHAR com_name_buffer[50];
-	HANDLE key_handle;
-
-	RtlInitEmptyUnicodeString(&com_name, com_name_buffer, sizeof(com_name_buffer));
-	status = IoOpenDeviceRegistryKey(port->device_object, PLUGPLAY_REGKEY_DEVICE, STANDARD_RIGHTS_READ, &key_handle);
-	if (!NT_SUCCESS(status)) return status;
-	status = GetRegistryKeyValue(key_handle, L"PortName", sizeof(L"PortName"), com_name_buffer, 50);
-	if (!NT_SUCCESS(status)) { 
-		ZwClose(key_handle); 
-		return status; 
-	}
-	ZwClose(key_handle);
-	status = IoCreateSymbolicLink(&com_name, &port->device_name);
-
-	return status;
-}
-*/

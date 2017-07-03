@@ -33,10 +33,6 @@ VOID AsyncComEvtIoRead(IN WDFQUEUE Queue, IN WDFREQUEST Request, IN size_t Lengt
 	struct asynccom_port *port = 0;
 	NTSTATUS status = STATUS_SUCCESS;
 
-	UNREFERENCED_PARAMETER(Queue);
-
-	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_PNP, "%s: Entering.", __FUNCTION__);
-
 	if (Length == 0) {
 		WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, Length);
 		return;
@@ -195,7 +191,7 @@ int get_next_request(struct asynccom_port *port)
 void AsynccomProcessRead(WDFDPC Dpc)
 {
 	struct asynccom_port *port = 0;
-	PREQUEST_CONTEXT context;
+	PREQUEST_CONTEXT context = NULL;
 
 	port = GetPortContext(WdfDpcGetParentObject(Dpc));
 	if (!get_next_request(port)) return;
@@ -249,7 +245,6 @@ NTSTATUS asynccom_port_data_write(struct asynccom_port *port, const unsigned cha
 	WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&write_descriptor, (PVOID)&parsed_data, sizeof(unsigned char) * byte_count * 2);
 
 	status = WdfUsbTargetPipeWriteSynchronously(pipe, WDF_NO_HANDLE, NULL, &write_descriptor, bytes_written);
-	TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "%s: Completed status: 0x%x.", __FUNCTION__, status);
 	if (!NT_SUCCESS(status)) TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "%s: Error status: 0x%x.", __FUNCTION__, status);
 	if (reversed_data) ExFreePoolWithTag(reversed_data, 'ataD');
 
@@ -274,7 +269,7 @@ void asynccom_port_received_data(__in  WDFUSBPIPE Pipe, __in  WDFMEMORY Buffer, 
 	receive_length = NumBytesTransferred;
 
 	if (port->current_read_request && port->timeouts.ReadIntervalTimeout != 0 && port->timeouts.ReadIntervalTimeout != MAXULONG) WdfTimerStart(port->read_request_interval_timer, WDF_REL_TIMEOUT_IN_MS(port->timeouts.ReadIntervalTimeout));
-	if (receive_length % 2) TraceEvents(TRACE_LEVEL_WARNING, DBG_WRITE, "%s: receive_length not even: %d.", __FUNCTION__, receive_length);
+	if (receive_length % 2) TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: receive_length not even: %d.", __FUNCTION__, receive_length);
 	read_buffer = WdfMemoryGetBuffer(Buffer, &buffer_size);
 
 	payload_size = (size_t)read_buffer[0];
@@ -299,11 +294,11 @@ void asynccom_port_received_data(__in  WDFUSBPIPE Pipe, __in  WDFMEMORY Buffer, 
 
 	if (payload_size + current_memory > memory_cap) {
 		payload_size = memory_cap - current_memory;
-		TraceEvents(TRACE_LEVEL_WARNING, DBG_WRITE, "%s: Payload too large, new payload size: %d.", __FUNCTION__, payload_size);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Payload too large, new payload size: %d.", __FUNCTION__, payload_size);
 	}
 	if (payload_size < receive_length - 1) memmove(read_buffer, read_buffer + 2, payload_size);
 	else {
-		TraceEvents(TRACE_LEVEL_WARNING, DBG_WRITE, "%s: Payload larger than buffer: Payload: %d, Receive Length: %d.", __FUNCTION__, payload_size, receive_length);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Payload larger than buffer: Payload: %d, Receive Length: %d.", __FUNCTION__, payload_size, receive_length);
 		return;
 	}
 
@@ -311,9 +306,8 @@ void asynccom_port_received_data(__in  WDFUSBPIPE Pipe, __in  WDFMEMORY Buffer, 
 	status = asynccom_frame_add_data(port->istream, read_buffer, (unsigned)payload_size);
 	WdfSpinLockRelease(port->istream_spinlock);
 
-	if (status == FALSE) TraceEvents(TRACE_LEVEL_WARNING, DBG_WRITE, "%s: Failed to add data to istream.", __FUNCTION__);
+	if (status == FALSE) TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Failed to add data to istream.", __FUNCTION__);
 	else TraceEvents(TRACE_LEVEL_INFORMATION, DBG_WRITE, "%s: Stream <= %i byte%s", __FUNCTION__, (int)payload_size, (payload_size == 1) ? " " : "s");
-
 	rejected_last_stream = 0;
 	WdfDpcEnqueue(port->process_read_dpc);
 	return;

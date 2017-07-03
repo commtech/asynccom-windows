@@ -40,7 +40,6 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
     UNREFERENCED_PARAMETER(InputBufferLength);
     UNREFERENCED_PARAMETER(OutputBufferLength);
 
-    PAGED_CODE();
 
 	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "%s: Entering.\n", __FUNCTION__);
     device = WdfIoQueueGetDevice(Queue);
@@ -257,7 +256,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
         }
         else line_control->StopBits = STOP_BIT_1;
 
-		bytes_returned = sizeof(line_control);
+		bytes_returned = sizeof(SERIAL_LINE_CONTROL); // SERIAL_LINE_CONTROL
 		break; 
 	}
 	case IOCTL_SERIAL_SET_TIMEOUTS: { 

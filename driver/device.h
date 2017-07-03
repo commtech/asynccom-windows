@@ -37,6 +37,7 @@ EVT_WDF_IO_QUEUE_IO_READ AsyncComEvtIoRead;
 NTSTATUS setup_spinlocks(_In_ struct asynccom_port *port);
 NTSTATUS setup_dpc(_In_ struct asynccom_port *port);
 NTSTATUS setup_timer(_In_ struct asynccom_port *port);
+NTSTATUS setup_queues(_In_ struct asynccom_port *port);
 
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS SelectInterfaces(_In_ struct asynccom_port *port);
