@@ -48,11 +48,11 @@ static const GUID COMMTECH_CLASS_GUID = { 0xe85c65cc, 0xb33b, 0x40d4,{ 0x81, 0x5
 // you know what you are doing.
 #define ASYNCCOM_WRITE_REGISTER				0x6A // write: 0x6A (address - 2B) (value - 4B)
 #define ASYNCCOM_READ_REGISTER				0x6B // write: 0x6B (address - 2B)
-// read : (value - 4B)
+                                                 // read : (value - 4B)
 #define ASYNCCOM_READ_WITH_ADDRESS			0x6C // write: 0x6C (address - 2B)
-// read : (address - 2B) (value - 4B)
+                                                 // read : (address - 2B) (value - 4B)
 #define ASYNCCOM_READ_WAIT_HIGH_VAL  		0x6D // write: 0x6D (address - 2B) (timeout - 1B) (mask - 4B)
-// read : (address - 2B) (value - 4B)
+                                                 // read : (address - 2B) (value - 4B)
 
 #define SYNCCOM_GET_STATUS					0xFE
 #define DEVICE_OBJECT_NAME_LENGTH       128
@@ -351,11 +351,6 @@ WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(REQUEST_CONTEXT, GetRequestContext)
 #define DEFAULT_RX_MULTIPLE_VALUE 0
 #define DEFAULT_WAIT_ON_WRITE_VALUE 0
 
-
-/* 18.432 MHz */
-#define DEFAULT_CLOCK_BITS {0x0f, 0x61, 0xe5, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x16, 0x40, 0x01, 0x04, 0x00, 0xff, 0xff, 0xff }
-#define DEFAULT_ASYNC_BITS {0x32, 0x00, 0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x82, 0x6a, 0x47, 0x01, 0x84, 0x00, 0xff, 0xff, 0xff }
-
 // These defines are taken from the microsoft serialp.h sample file.
 //
 // The following three macros are used to initialize, set
@@ -371,31 +366,6 @@ WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(REQUEST_CONTEXT, GetRequestContext)
 #define SERIAL_REF_INT_TIMER   (0x00000008)
 #define SERIAL_REF_XOFF_REF    (0x00000010)
 
-
-#define SERIAL_INIT_REFERENCE(ReqContext) { \
-    (ReqContext)->RefCount = NULL; \
-    }
-
-#define SERIAL_SET_REFERENCE(ReqContext, RefType) \
-   do { \
-       LONG _refType = (RefType); \
-       PULONG_PTR _arg4 = (PVOID)&(ReqContext)->RefCount; \
-       ASSERT(!(*_arg4 & _refType)); \
-       *_arg4 |= _refType; \
-   } WHILE (0)
-
-#define SERIAL_CLEAR_REFERENCE(ReqContext, RefType) \
-   do { \
-       LONG _refType = (RefType); \
-       PULONG_PTR _arg4 = (PVOID)&(ReqContext)->RefCount; \
-       ASSERT(*_arg4 & _refType); \
-       *_arg4 &= ~_refType; \
-   } WHILE (0)
-
-#define SERIAL_REFERENCE_COUNT(ReqContext) \
-    ((ULONG_PTR)(((ReqContext)->RefCount)))
-
-#define SERIAL_TEST_REFERENCE(ReqContext, RefType) ((ULONG_PTR)ReqContext ->RefCount & RefType)
 
 //
 // Prototypes and defines to handle processor groups.
