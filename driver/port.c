@@ -98,7 +98,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
 			break;
 		}
-		status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET, (UCHAR)PtrToUlong(buffer));
+		status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET, *((UCHAR *)(buffer)));
 		break; 
 	}
 	case IOCTL_SERIAL_SET_FIFO_CONTROL: {		
@@ -107,7 +107,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
 			break;
 		}
-		status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, FCR_OFFSET, (UCHAR)PtrToUlong(buffer));
+		status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, FCR_OFFSET, *((UCHAR *)(buffer)));
 		break;  
 	}
 	case IOCTL_SERIAL_SET_LINE_CONTROL: { 
@@ -381,7 +381,8 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
             TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
             break;
         }
-        mask = PtrToUlong(buffer);
+        mask = *((ULONG *)(buffer));
+        TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL: Attempting to purge.. %lu", mask);
         asynccom_port_purge(port, mask);	
         break; 
     }
