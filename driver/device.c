@@ -200,34 +200,26 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	
 }
 
-NTSTATUS setup_timer(_In_ struct asynccom_port *port)
+NTSTATUS setup_dpc(_In_ struct asynccom_port *port)
 {
-	NTSTATUS status = STATUS_SUCCESS;
-	WDF_TIMER_CONFIG timer_config;
-	WDF_OBJECT_ATTRIBUTES timer_attributes;
+	NTSTATUS							status = STATUS_SUCCESS;
+	WDF_DPC_CONFIG						dpcConfig;
+	WDF_OBJECT_ATTRIBUTES				dpcAttributes;
 
-	WDF_TIMER_CONFIG_INIT(&timer_config, serial_read_timeout);
-	timer_config.AutomaticSerialization = TRUE;
-	
-	WDF_OBJECT_ATTRIBUTES_INIT(&timer_attributes);
-	timer_attributes.ParentObject = port->device;
-	status = WdfTimerCreate(&timer_config, &timer_attributes, &port->read_request_total_timer);
+	WDF_OBJECT_ATTRIBUTES_INIT(&dpcAttributes);
+	dpcAttributes.ParentObject = port->device;
+
+	WDF_DPC_CONFIG_INIT(&dpcConfig, &AsynccomProcessRead);
+	dpcConfig.AutomaticSerialization = TRUE;
+
+	status = WdfDpcCreate(&dpcConfig, &dpcAttributes, &port->process_read_dpc);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Failed to set up reaad_request_total_timer! %!STATUS!", __FUNCTION__, status);
+		WdfObjectDelete(port->device);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: process_read_dpc failed %!STATUS!", __FUNCTION__, status);
 		return status;
 	}
 
-	WDF_TIMER_CONFIG_INIT(&timer_config, serial_read_timeout);
-	timer_config.AutomaticSerialization = TRUE;
-
-	WDF_OBJECT_ATTRIBUTES_INIT(&timer_attributes);
-	timer_attributes.ParentObject = port->device;
-	status = WdfTimerCreate(&timer_config, &timer_attributes, &port->read_request_interval_timer);
-	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Failed to set up reaad_request_total_timer! %!STATUS!", __FUNCTION__, status);
-		return status;
-	}
-	return status;
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS setup_port(_In_ struct asynccom_port *port)
@@ -317,47 +309,8 @@ NTSTATUS setup_port(_In_ struct asynccom_port *port)
 	return status;
 }
 
-NTSTATUS setup_spinlocks(_In_ struct asynccom_port *port)
+NTSTATUS setup_queues(_In_ struct asynccom_port *port) 
 {
-	NTSTATUS status = STATUS_SUCCESS;
-	WDF_OBJECT_ATTRIBUTES attributes;
-
-	WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
-	attributes.ParentObject = port->device;
-
-	status = WdfSpinLockCreate(&attributes, &port->istream_spinlock);
-	if (!NT_SUCCESS(status)) {
-		WdfObjectDelete(port->device);
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "WdfSpinLockCreate failed %!STATUS!", status);
-		return status;
-	}
-
-	return STATUS_SUCCESS;
-}
-
-NTSTATUS setup_dpc(_In_ struct asynccom_port *port)
-{
-	NTSTATUS							status = STATUS_SUCCESS;
-	WDF_DPC_CONFIG						dpcConfig;
-	WDF_OBJECT_ATTRIBUTES				dpcAttributes;
-
-	WDF_OBJECT_ATTRIBUTES_INIT(&dpcAttributes);
-	dpcAttributes.ParentObject = port->device;
-
-	WDF_DPC_CONFIG_INIT(&dpcConfig, &AsynccomProcessRead);
-	dpcConfig.AutomaticSerialization = TRUE;
-
-	status = WdfDpcCreate(&dpcConfig, &dpcAttributes, &port->process_read_dpc);
-	if (!NT_SUCCESS(status)) {
-		WdfObjectDelete(port->device);
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: process_read_dpc failed %!STATUS!", __FUNCTION__, status);
-		return status;
-	}
-
-	return STATUS_SUCCESS;
-}
-
-NTSTATUS setup_queues(_In_ struct asynccom_port *port) {
     NTSTATUS							status = STATUS_SUCCESS;
     WDF_IO_QUEUE_CONFIG					queue_config;
 
@@ -417,6 +370,54 @@ NTSTATUS setup_queues(_In_ struct asynccom_port *port) {
     }
 
     return status;
+}
+
+NTSTATUS setup_spinlocks(_In_ struct asynccom_port *port)
+{
+	NTSTATUS status = STATUS_SUCCESS;
+	WDF_OBJECT_ATTRIBUTES attributes;
+
+	WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
+	attributes.ParentObject = port->device;
+
+	status = WdfSpinLockCreate(&attributes, &port->istream_spinlock);
+	if (!NT_SUCCESS(status)) {
+		WdfObjectDelete(port->device);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "WdfSpinLockCreate failed %!STATUS!", status);
+		return status;
+	}
+
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS setup_timer(_In_ struct asynccom_port *port)
+{
+	NTSTATUS status = STATUS_SUCCESS;
+	WDF_TIMER_CONFIG timer_config;
+	WDF_OBJECT_ATTRIBUTES timer_attributes;
+
+	WDF_TIMER_CONFIG_INIT(&timer_config, serial_read_timeout);
+	timer_config.AutomaticSerialization = TRUE;
+	
+	WDF_OBJECT_ATTRIBUTES_INIT(&timer_attributes);
+	timer_attributes.ParentObject = port->device;
+	status = WdfTimerCreate(&timer_config, &timer_attributes, &port->read_request_total_timer);
+	if (!NT_SUCCESS(status)) {
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Failed to set up reaad_request_total_timer! %!STATUS!", __FUNCTION__, status);
+		return status;
+	}
+
+	WDF_TIMER_CONFIG_INIT(&timer_config, serial_read_timeout);
+	timer_config.AutomaticSerialization = TRUE;
+
+	WDF_OBJECT_ATTRIBUTES_INIT(&timer_attributes);
+	timer_attributes.ParentObject = port->device;
+	status = WdfTimerCreate(&timer_config, &timer_attributes, &port->read_request_interval_timer);
+	if (!NT_SUCCESS(status)) {
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Failed to set up reaad_request_total_timer! %!STATUS!", __FUNCTION__, status);
+		return status;
+	}
+	return status;
 }
 
 NTSTATUS AsyncComEvtDevicePrepareHardware(WDFDEVICE Device, WDFCMRESLIST ResourceList, WDFCMRESLIST ResourceListTranslated)
