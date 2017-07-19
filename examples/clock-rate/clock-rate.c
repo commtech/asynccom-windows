@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <Windows.h>
-#include <ntddser.h>
 #include "../../inc/asynccom.h"
 
 int main(void)
