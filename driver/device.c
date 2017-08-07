@@ -63,15 +63,17 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	struct asynccom_port				*port = 0;
 	static ULONG						instance = 0;
 	ULONG								port_num = 0;
+    WCHAR                               device_name_buffer[20];
+    UNICODE_STRING                      device_name;
 
 	UNREFERENCED_PARAMETER(Driver);
 	UNREFERENCED_PARAMETER(DeviceInit);
 	PAGED_CODE();
-    DECLARE_UNICODE_STRING_SIZE(device_name, DEVICE_OBJECT_NAME_LENGTH);
+
 	port_num = instance;
 	instance++;
-
-    status = RtlUnicodeStringPrintf(&device_name, L"%ws%d", L"\\Device\\ASYNCCOM", port_num);
+    RtlInitEmptyUnicodeString(&device_name, device_name_buffer, sizeof(device_name_buffer));
+    status = RtlUnicodeStringPrintf(&device_name, L"\\Device\\ASYNCCOM%i", instance++);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: RtlUnicodeStringPrintf failed %!STATUS!", __FUNCTION__, status);
 		return 0;
