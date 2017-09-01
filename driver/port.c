@@ -712,6 +712,37 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		bytes_returned = sizeof(BOOLEAN);
 		break;
 	}
+	case IOCTL_ASYNCCOM_ENABLE_ISOCHRONOUS: {
+		int *isochronous = 0;
+		
+		status = WdfRequestRetrieveInputBuffer(Request, sizeof(*isochronous), (PVOID *)&isochronous, NULL);
+		if( !NT_SUCCESS(status) ) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
+			break;
+		}
+		status = asynccom_port_set_isochronous(port, *isochronous);
+		break;
+	}
+	case IOCTL_ASYNCCOM_DISABLE_ISOCHRONOUS: {
+		status = asynccom_port_set_isochronous(port, -1);
+		break;
+	}
+	case IOCTL_ASYNCCOM_GET_ISOCHRONOUS: {
+		int *isochronous = 0;
+	
+		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(*isochronous), (PVOID *)&isochronous, NULL);
+		 if( !NT_SUCCESS(status) ) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
+			break;
+		 }
+
+		*isochronous = asynccom_port_get_isochronous(port);
+
+		bytes_returned = sizeof(int);
+		break;
+	}
+
+
 	default :
         status = STATUS_INVALID_DEVICE_REQUEST;
         break;
@@ -1080,6 +1111,66 @@ NTSTATUS asynccom_port_set_isochronous(_In_ struct asynccom_port *port, int mode
 	if (!NT_SUCCESS(status)) { return status; }
 	status = asynccom_port_set_spr_register(port, CKS_OFFSET, new_cks);
 	return status;
+}
+
+int asynccom_port_get_isochronous(_In_ struct asynccom_port *port)
+{
+	UINT32 current_cks = 0;
+	int mode = 0;
+	
+	current_cks = asynccom_port_get_spr_register(port, CKS_OFFSET);
+	
+	switch (current_cks) {
+    case 0x00:
+        mode = -1;
+        break;
+
+    case 0xD0:
+        mode = 0;
+        break;
+
+    case 0x90:
+        mode = 1;
+        break;
+
+    case 0x09:
+        mode = 2;
+        break;
+
+    case 0xD9:
+        mode = 3;
+        break;
+
+    case 0x99:
+        mode = 4;
+        break;
+
+    case 0x0A:
+        mode = 5;
+        break;
+
+    case 0xDA:
+        mode = 6;
+        break;
+
+    case 0x9A:
+        mode = 7;
+        break;
+
+    case 0xDB:
+        mode = 8;
+        break;
+
+    case 0x10:
+        mode = 9;
+        break;
+
+    case 0x19:
+        mode = 10;
+        break;
+    }
+	
+	return mode;
 }
 
 NTSTATUS asynccom_port_set_9bit(_In_ struct asynccom_port *port, BOOLEAN ninebit)
