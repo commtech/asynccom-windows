@@ -20,3 +20,7 @@ This is the initial release of the 1.0 driver series.
 - Some documentation tweaks.
 - Fixed the build configurations.
 - Small changes to the INF.
+
+## [2.0.4](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.4) (09/01/2017)
+- Finished implementing isochronous.
+- Modified the naming to hopefully resolve some character size issues.
