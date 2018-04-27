@@ -185,6 +185,12 @@ int get_next_request(struct asynccom_port *port)
 
 	// Interval timer isn't enabled until the first byte is received.
 	// With that in mind, I feel no need to address the interval timer in this function.
+	
+	// 04/27/2018 I have learned that our serialfc-windows drivers use an interval timer
+	// before the first byte, and it seems to be required for some terminal programs
+	// to release the handle to the drivers, so I'm adding it.
+	if ((port->timeouts.ReadIntervalTimeout !=0) && (port->timeouts.ReadIntervalTimeout != MAXULONG)) WdfTimerStart(port->read_request_interval_timer, WDF_REL_TIMEOUT_IN_MS(port->timeouts.ReadIntervalTimeout));
+
 	return 1;
 }
 
