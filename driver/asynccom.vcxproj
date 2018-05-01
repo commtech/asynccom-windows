@@ -367,17 +367,17 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7Release|x64'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc;"SDK Path\Include"</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw;"SDK Path\Include"</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -386,17 +386,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win10Release|x64'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc;"SDK Path\Include"</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw;"SDK Path\Include"</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -405,17 +405,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8Release|x64'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -424,17 +424,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1Release|x64'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -443,17 +443,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7Debug|x64'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -462,17 +462,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win10Debug|x64'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -481,17 +481,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8Debug|x64'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -500,17 +500,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1Debug|x64'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -519,17 +519,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7Release|Win32'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -538,17 +538,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win10Release|Win32'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -557,17 +557,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8Release|Win32'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -576,17 +576,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1Release|Win32'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -595,17 +595,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7Debug|Win32'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -614,17 +614,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win10Debug|Win32'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -633,17 +633,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8Debug|Win32'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -652,17 +652,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1Debug|Win32'">
     <ResourceCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\lib\raw</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>
     </Midl>
     <Link>
@@ -777,7 +777,7 @@
     </ClCompile>
     <Inf>
       <CatalogFileName>asynccom.cat</CatalogFileName>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win10Release|x64'">
@@ -789,7 +789,7 @@
     </ClCompile>
     <Inf>
       <CatalogFileName>asynccom.cat</CatalogFileName>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
     </Inf>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8Release|x64'">
@@ -800,7 +800,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -812,7 +812,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -824,7 +824,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -836,7 +836,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -848,7 +848,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -860,7 +860,7 @@
       <WppMinimalRebuildFromTracking>true</WppMinimalRebuildFromTracking>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -872,7 +872,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -884,7 +884,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -896,7 +896,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -908,7 +908,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -920,7 +920,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -932,7 +932,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -944,7 +944,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -956,7 +956,7 @@
       <WppEnabled>true</WppEnabled>
     </ClCompile>
     <Inf>
-      <TimeStamp>2.0.4</TimeStamp>
+      <TimeStamp>2.0.4b</TimeStamp>
       <CatalogFileName>asynccom.cat</CatalogFileName>
     </Inf>
   </ItemDefinitionGroup>
@@ -994,7 +994,7 @@
     <None Include="*.asmx" Exclude="@(None)" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\inc\asynccom.h" />
+    <ClInclude Include="..\lib\raw\asynccom.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="device.h" />
     <ClInclude Include="frame.h" />

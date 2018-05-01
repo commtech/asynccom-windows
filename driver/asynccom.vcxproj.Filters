@@ -101,7 +101,7 @@
     <ClInclude Include="trace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\inc\asynccom.h">
+    <ClInclude Include="..\lib\raw\asynccom.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <Windows.h>
-#include "../../inc/asynccom.h"
+#include "asynccom.h"
 
 int loop_test(HANDLE h, int bytes_to_read);
 

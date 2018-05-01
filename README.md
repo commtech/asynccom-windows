@@ -17,7 +17,7 @@ Create a new C file (named tutorial.c) with the following code.
 #include <stdlib.h>
 #include <Windows.h>
 #include <ntddser.h>
-#include "../../inc/asynccom.h"
+#include "asynccom.h"
 
 int main(void)
 {
