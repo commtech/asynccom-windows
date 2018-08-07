@@ -85,7 +85,7 @@ You have now transmitted and received data!
 ## Using The Serial Port
 ### Setting Baud Rate
 ##### Max Supported Speeds
-The Fastcom: Async Com has a maximum baud rate 15 Mhz, but throughput may be lower than that.
+The Fastcom: Async Com has a maximum baud rate 40 Mhz, but throughput may be lower than that.
 
 
 The Fastcom: Async Com cards have their baud rate configured using the standard Windows API, such as IOCTL_SERIAL_SET_BAUD_RATE.
