@@ -26,7 +26,7 @@ extern "C"
 #endif
 #include <string.h>
 
-struct synccom_memory_cap {
+struct asynccom_memory_cap {
 	int input;
 	int output;
 };

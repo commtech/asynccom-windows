@@ -1,7 +1,9 @@
 # ChangeLog
 
-## Current Changes
+## [2.0.5](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.5) (04/27/2018)
 - Removed references to nine bit mode. it is not currently supported. References in the driver are retained for backwards compatibility purposes only.
+- Changed IntervalTimeout to immediately occur, increasing compatibility with terminal programs.
+- Change /inc to /lib/raw to be more in line with other Commtech repositories.
 
 ## [2.0.4](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.4) (09/01/2017)
 - Finished implementing isochronous.

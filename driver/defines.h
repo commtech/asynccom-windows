@@ -300,10 +300,7 @@ typedef struct asynccom_port {
 	WDFDPC istream_dpc;
 	WDFDPC process_read_dpc;
 
-	//
-	// To be removed
-	//
-	struct synccom_memory_cap memory_cap;
+	struct asynccom_memory_cap memory_cap;
 
 	//
 	// New async stuff added to port structure
