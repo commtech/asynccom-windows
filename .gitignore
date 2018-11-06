@@ -10,6 +10,10 @@ src/classinstaller/buildchk*
 redist/production/serial/
 redist/production/amd64/serial/
 redist/production/i386/serial/
+examples/*/Release/
+tools/*/Release/
+tools/*/Win10*/
+debugging/
 bin/
 htm/
 lib/c/docs
@@ -29,6 +33,8 @@ lib/net/loop/*.exe
 *.pnps
 *.pnproj
 *~
+*.db
+*.opendb
 examples/*.exe
 
 Win7*/
