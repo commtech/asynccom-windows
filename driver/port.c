@@ -530,14 +530,14 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		unsigned char *firmware_line = 0;
 		size_t data_size = 0;
 
-		status = WdfRequestRetrieveInputBuffer(Request, 1, &firmware_line, &buffer_size);
+		status = WdfRequestRetrieveInputBuffer(Request, 1, (PVOID *)&firmware_line, &buffer_size);
 		if (!NT_SUCCESS(status)) {
 			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "WdfRequestRetrieveInputMemory failed %!STATUS!", status);
 			break;
 		}
 		for (data_size = 0;; data_size++)
 		{
-			if (firmware_line[data_size] == 0x13) break; // Should pass everything before 0x13. This will return the size of everything before 0x13.
+			if (firmware_line[data_size] == '\n') break; // Should pass everything before the newline.
 			if (data_size > 50) break; // Best safety check I can think of - highest should be ~47, so this will see a runaway line.
 		}
 		if (data_size < 51) status = asynccom_port_program_firmware(port, firmware_line, data_size);
