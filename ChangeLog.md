@@ -1,5 +1,9 @@
 # ChangeLog
 
+## [2.0.6](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.6) (02/25/2019)
+- Fixed the 'reprogram firmware' IOCTL.
+- Updated the copyright years.
+
 ## [2.0.5](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.5) (04/27/2018)
 - Removed references to nine bit mode. it is not currently supported. References in the driver are retained for backwards compatibility purposes only.
 - Changed IntervalTimeout to immediately occur, increasing compatibility with terminal programs.
