@@ -1,5 +1,8 @@
 # ChangeLog
 
+## [2.0.7](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.7) (04/02/2019)
+- Updated to the MIT license.
+
 ## [2.0.6](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.6) (02/25/2019)
 - Fixed the 'reprogram firmware' IOCTL.
 - Updated the copyright years.
