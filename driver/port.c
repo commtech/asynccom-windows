@@ -766,6 +766,7 @@ NTSTATUS asynccom_port_get_status(_In_ struct asynccom_port *port, PSERIAL_STATU
     settings->Errors = 0;
     settings->EofReceived = 0;
     settings->AmountInInQueue = asynccom_port_get_input_memory_usage(port);
+	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "Memory Usage: %d.", settings->AmountInInQueue);
     settings->AmountInOutQueue = 0;
     settings->HoldReasons = 0;
     if (port->TXHolding) {
@@ -775,9 +776,10 @@ NTSTATUS asynccom_port_get_status(_In_ struct asynccom_port *port, PSERIAL_STATU
         if (port->TXHolding & SERIAL_TX_XOFF) settings->HoldReasons |= SERIAL_TX_WAITING_FOR_XON;
         if (port->TXHolding & SERIAL_TX_BREAK) settings->HoldReasons |= SERIAL_TX_WAITING_ON_BREAK;
     }
-
+	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "TXHolding: %d.", port->TXHolding);
     if (port->RXHolding & SERIAL_RX_DSR) settings->HoldReasons |= SERIAL_RX_WAITING_FOR_DSR;
     if (port->RXHolding & SERIAL_RX_XOFF) settings->HoldReasons |= SERIAL_TX_WAITING_XOFF_SENT;
+	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "RXHolding: %d.", port->TXHolding);
 
     return STATUS_SUCCESS;
 }

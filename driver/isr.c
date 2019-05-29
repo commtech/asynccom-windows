@@ -54,7 +54,7 @@ VOID AsyncComEvtIoRead(IN WDFQUEUE Queue, IN WDFREQUEST Request, IN size_t Lengt
 		WdfRequestComplete(Request, status);
 		return;
 	}
-
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: Queueing read for %d bytes.", __FUNCTION__, Length);
 	WdfDpcEnqueue(port->process_read_dpc);
 }
 
