@@ -287,20 +287,22 @@ typedef struct asynccom_port {
 	WDFTIMER						read_request_total_timer;
 	WDFTIMER						read_request_interval_timer;
 	WDFREQUEST						current_read_request;
+	WDFREQUEST						current_write_request;
 
 	unsigned port_number;
 
 	WDFQUEUE write_queue;
+	WDFQUEUE write_queue2;
 	WDFQUEUE read_queue;
 	WDFQUEUE read_queue2; // TODO: Change name to be more descriptive. 
 	WDFQUEUE ioctl_queue;
 
 	WDFSPINLOCK istream_spinlock;
+	WDFSPINLOCK ostream_spinlock;
 	struct asynccom_frame *istream; // Transparent stream 
 	struct asynccom_frame *pending_oframe; // Frame being put in the FIFO 
 
-	WDFDPC oframe_dpc;
-	WDFDPC istream_dpc;
+	WDFDPC process_write_dpc;
 	WDFDPC process_read_dpc;
 
 	struct asynccom_memory_cap memory_cap;

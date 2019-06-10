@@ -224,6 +224,15 @@ NTSTATUS setup_dpc(_In_ struct asynccom_port *port)
 		return status;
 	}
 
+	WDF_DPC_CONFIG_INIT(&dpcConfig, &AsynccomProcessWrite);
+	dpcConfig.AutomaticSerialization = TRUE;
+
+	status = WdfDpcCreate(&dpcConfig, &dpcAttributes, &port->process_write_dpc);
+	if (!NT_SUCCESS(status)) {
+		WdfObjectDelete(port->device);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: process_read_dpc failed %!STATUS!", __FUNCTION__, status);
+		return status;
+	}
 	return STATUS_SUCCESS;
 }
 
@@ -351,6 +360,13 @@ NTSTATUS setup_queues(_In_ struct asynccom_port *port)
         return status;
     }
 
+	WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchManual);
+	status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->write_queue2);
+	if (!NT_SUCCESS(status)) {
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
+		return status;
+	}
+
     WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
     queue_config.EvtIoRead = AsyncComEvtIoRead;
     queue_config.EvtIoStop = AsyncComEvtIoStop;
@@ -386,6 +402,16 @@ NTSTATUS setup_spinlocks(_In_ struct asynccom_port *port)
 	attributes.ParentObject = port->device;
 
 	status = WdfSpinLockCreate(&attributes, &port->istream_spinlock);
+	if (!NT_SUCCESS(status)) {
+		WdfObjectDelete(port->device);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "WdfSpinLockCreate failed %!STATUS!", status);
+		return status;
+	}
+
+	WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
+	attributes.ParentObject = port->device;
+
+	status = WdfSpinLockCreate(&attributes, &port->ostream_spinlock);
 	if (!NT_SUCCESS(status)) {
 		WdfObjectDelete(port->device);
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "WdfSpinLockCreate failed %!STATUS!", status);

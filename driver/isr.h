@@ -29,15 +29,18 @@ THE SOFTWARE.
 #include "trace.h"
 
 EVT_WDF_DPC		AsynccomProcessRead;
+EVT_WDF_DPC		AsynccomProcessWrite;
 
 NTSTATUS		asynccom_port_data_write(struct asynccom_port *port, const unsigned char *data, unsigned byte_count);
 void			serial_read_timeout(IN WDFTIMER Timer);
-int				get_next_request(struct asynccom_port *port);
-void			complete_current_request(struct asynccom_port *port);
+int				get_next_read_request(struct asynccom_port *port);
+void			complete_current_read_request(struct asynccom_port *port);
+void			complete_current_write_request(struct asynccom_port *port);
 NTSTATUS		asynccom_port_purge(_In_ struct asynccom_port *port, ULONG mask);
 
 EVT_WDF_IO_QUEUE_IO_STOP AsyncComEvtIoStop;
 EVT_WDF_USB_READER_COMPLETION_ROUTINE asynccom_port_received_data;
 EVT_WDF_USB_READERS_FAILED FX3EvtReadFailed;
+void basic_completion(_In_ WDFREQUEST Request, _In_ WDFIOTARGET Target, _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams, _In_ WDFCONTEXT Context);
 
 #endif
