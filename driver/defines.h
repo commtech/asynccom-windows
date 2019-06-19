@@ -270,24 +270,27 @@ typedef struct asynccom_frame {
 } ASYNCCOM_FRAME;
 
 typedef struct asynccom_port {
-	WDFUSBDEVICE                    usb_device;
-	ULONG							usb_traits;
-	PDRIVER_OBJECT					driver_object;
-	PDEVICE_OBJECT					device_object;
-	WDFDEVICE						device;
-	WDFUSBINTERFACE                 usb_interface;
-	UNICODE_STRING					device_name;
-	ULONG							skip_naming;
-	BOOLEAN							created_symbolic_link;
-	BOOLEAN							created_serial_comm_entry;
-	WDFUSBPIPE                      data_read_pipe;
-	WDFUSBPIPE                      data_write_pipe;
-	WDFUSBPIPE						register_write_pipe;
-	WDFUSBPIPE						register_read_pipe;
-	WDFTIMER						read_request_total_timer;
-	WDFTIMER						read_request_interval_timer;
-	WDFREQUEST						current_read_request;
-	WDFREQUEST						current_write_request;
+	WDFUSBDEVICE usb_device;
+	ULONG usb_traits;
+	PDRIVER_OBJECT driver_object;
+	PDEVICE_OBJECT device_object;
+	WDFDEVICE device;
+	WDFUSBINTERFACE usb_interface;
+	UNICODE_STRING device_name;
+	ULONG skip_naming;
+	BOOLEAN created_symbolic_link;
+	BOOLEAN created_serial_comm_entry;
+	WDFUSBPIPE data_read_pipe;
+	WDFUSBPIPE data_write_pipe;
+	WDFUSBPIPE register_write_pipe;
+	WDFUSBPIPE register_read_pipe;
+	WDFTIMER read_request_total_timer;
+	WDFTIMER read_request_interval_timer;
+	WDFREQUEST current_read_request;
+	WDFREQUEST current_write_request;
+	WDFREQUEST current_wait_request;
+	ULONG current_mask_value;
+	ULONG current_mask_history;
 
 	unsigned port_number;
 
@@ -310,21 +313,21 @@ typedef struct asynccom_port {
 	//
 	// New async stuff added to port structure
 	//
-	UINT32							current_acr;
-	UINT32							current_mcr;
-	UINT32							current_clock_frequency;
-	unsigned short					current_divisor;
-	ULONG							current_baud;
-	UINT32							current_sample_rate;
-	unsigned char					line_control;
-	unsigned char					valid_data_mask;
-	unsigned char					escape_char;
-	SERIAL_CHARS					special_chars;
-	SERIAL_TIMEOUTS					timeouts;
+	UINT32 current_acr;
+	UINT32 current_mcr;
+	UINT32 current_clock_frequency;
+	unsigned short current_divisor;
+	ULONG current_baud;
+	UINT32 current_sample_rate;
+	unsigned char line_control;
+	unsigned char valid_data_mask;
+	unsigned char escape_char;
+	SERIAL_CHARS special_chars;
+	SERIAL_TIMEOUTS timeouts;
 
-	ULONG							TXHolding;
-	ULONG							RXHolding;
-	ULONG							buffer_size; //Is this necessary?
+	ULONG TXHolding;
+	ULONG RXHolding;
+	ULONG buffer_size; //Is this necessary?
 
 	SERIAL_HANDFLOW HandFlow;
 
@@ -336,7 +339,15 @@ typedef struct _REQUEST_CONTEXT {
 	ULONG_PTR information;
 	NTSTATUS status;
 	ULONG length;
-	unsigned char *data_buffer;
+	PVOID ref_count;
+	UCHAR major_function;
+	PFN_WDF_REQUEST_CANCEL cancel_routine;
+	BOOLEAN cancelled;
+	PVOID type3_input_buffer;
+	ASYNCCOM_PORT *port;
+	ULONG ioctl_code;
+	BOOLEAN mark_cancelable_on_resume;
+	PVOID *data_buffer;
 } REQUEST_CONTEXT, *PREQUEST_CONTEXT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(REQUEST_CONTEXT, GetRequestContext)

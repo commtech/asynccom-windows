@@ -89,5 +89,6 @@ NTSTATUS			asynccom_port_program_firmware(_In_ struct asynccom_port *port, unsig
 void				asynccom_port_set_clock_bits(_In_ struct asynccom_port *port, unsigned char *clock_data);
 NTSTATUS            asynccom_port_get_status(_In_ struct asynccom_port *port, PSERIAL_STATUS settings);
 ULONG               asynccom_port_modem_status(_In_ struct asynccom_port *port);
+void				asynccom_port_set_memory_cap(struct asynccom_port *port, struct asynccom_memory_cap *value);
 
 #endif

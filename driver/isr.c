@@ -115,7 +115,7 @@ void complete_current_read_request(struct asynccom_port *port)
 		context = GetRequestContext(old_request);
 		// Technically, STATUS_TIMEOUT is inside the realm of 'success' for NT_SUCCESS.
 		// This is just to make sure I don't try to throw data into a bad pointer.
-		if (NT_SUCCESS(context->status)) context->information = asynccom_frame_remove_data(port->istream, context->data_buffer, context->length);
+		if (NT_SUCCESS(context->status)) context->information = asynccom_frame_remove_data(port->istream, (unsigned char *)context->data_buffer, context->length);
 		TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: completing read with %X, info: %d", __FUNCTION__, context->status, (int)context->information);
 		WdfRequestCompleteWithInformation(old_request, context->status, context->information);
 	}
@@ -135,11 +135,31 @@ void complete_current_write_request(struct asynccom_port *port)
 	{
 		context = GetRequestContext(old_request);
 		if (NT_SUCCESS(context->status)) context->information = context->length;
+		TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: completing write with %X, info: %d", __FUNCTION__, context->status, (int)context->information);
 		WdfRequestCompleteWithInformation(old_request, context->status, context->information);
 	}
 	return;
 }
 
+void complete_current_wait_request(struct asynccom_port *port, NTSTATUS status, ULONG info, ULONG matches)
+{
+	WDFREQUEST old_request = NULL;
+	PREQUEST_CONTEXT context;
+
+	old_request = port->current_wait_request;
+	port->current_wait_request = 0;
+	port->current_mask_history = 0;
+
+	if (old_request)
+	{
+		context = GetRequestContext(old_request);
+		context->information = info;
+		context->status = status;
+		context->data_buffer = (PVOID)&matches;
+		TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: completing wait with %X, info: %d", __FUNCTION__, context->status, (ULONG)context->information);
+		WdfRequestCompleteWithInformation(old_request, context->status, context->information);
+	}
+}
 int get_next_read_request(struct asynccom_port *port)
 {
 	NTSTATUS status;
@@ -226,9 +246,7 @@ int get_next_write_request(struct asynccom_port *port)
 	status = WdfIoQueueRetrieveNextRequest(port->write_queue2, &port->current_write_request);
 	if (!NT_SUCCESS(status))
 	{
-		// Didn't work. Reset the read request, just in case.
 		port->current_write_request = NULL;
-		// Well, there are no more left, that's why we couldn't get another.
 		if (status == STATUS_NO_MORE_ENTRIES) return 0;
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueRetrieveNextRequest failed: %X", __FUNCTION__, status);
 		return 0;
@@ -277,12 +295,17 @@ void AsynccomProcessWrite(WDFDPC Dpc)
 	PREQUEST_CONTEXT context = NULL;
 
 	port = GetPortContext(WdfDpcGetParentObject(Dpc));
-	if (!get_next_write_request(port)) return;
+	if (!get_next_write_request(port))
+	{
+		event_occurred(port, SERIAL_EV_TXEMPTY);
+		return;
+	}
 
 	context = GetRequestContext(port->current_write_request);
 	if (!context) return;
-	context->status = asynccom_port_data_write(port, context->data_buffer, context->length);
+	context->status = asynccom_port_data_write(port, (unsigned char *)context->data_buffer, context->length);
 	complete_current_write_request(port);
+	WdfDpcEnqueue(port->process_write_dpc);
 	return;
 }
 
@@ -421,6 +444,9 @@ void asynccom_port_received_data(__in  WDFUSBPIPE Pipe, __in  WDFMEMORY Buffer, 
 	status = asynccom_frame_add_data(port->istream, read_buffer, (unsigned)payload_size);
 	WdfSpinLockRelease(port->istream_spinlock);
 
+	if (asynccom_port_get_input_memory_usage(port) >(asynccom_port_get_input_memory_cap(port)*.8)) event_occurred(port, SERIAL_EV_RX80FULL);
+	event_occurred(port, SERIAL_EV_RXCHAR);
+
 	if (status == FALSE) TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Failed to add data to istream.", __FUNCTION__);
 	else TraceEvents(TRACE_LEVEL_INFORMATION, DBG_WRITE, "%s: Stream <= %i byte%s", __FUNCTION__, (int)payload_size, (payload_size == 1) ? " " : "s");
 	rejected_last_stream = 0;
@@ -459,15 +485,19 @@ NTSTATUS asynccom_port_purge(_In_ struct asynccom_port *port, ULONG mask) {
 
 
 	if (mask & SERIAL_PURGE_TXABORT) {
-		WdfIoQueuePurgeSynchronously(port->write_queue);
-		WdfIoQueuePurgeSynchronously(port->write_queue2);
+		//WdfIoQueuePurgeSynchronously(port->write_queue);
+		//WdfIoQueuePurgeSynchronously(port->write_queue2);
+		WdfIoQueuePurge(port->write_queue, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
+		WdfIoQueuePurge(port->write_queue2, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
 		WdfIoQueueStart(port->write_queue);
 		WdfIoQueueStart(port->write_queue2);
 	}
 
 	if (mask & SERIAL_PURGE_RXABORT) {
-		WdfIoQueuePurgeSynchronously(port->read_queue);
-		WdfIoQueuePurgeSynchronously(port->read_queue2);
+		//WdfIoQueuePurgeSynchronously(port->read_queue);
+		//WdfIoQueuePurgeSynchronously(port->read_queue2);
+		WdfIoQueuePurge(port->read_queue, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
+		WdfIoQueuePurge(port->read_queue2, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
 		WdfIoQueueStart(port->read_queue);
 		WdfIoQueueStart(port->read_queue2);
 	}
@@ -479,7 +509,6 @@ NTSTATUS asynccom_port_purge(_In_ struct asynccom_port *port, ULONG mask) {
 	}
 	return STATUS_SUCCESS;
 }
-
 
 void basic_completion(_In_ WDFREQUEST Request, _In_ WDFIOTARGET Target, _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams, _In_ WDFCONTEXT Context)
 {
@@ -497,4 +526,24 @@ void basic_completion(_In_ WDFREQUEST Request, _In_ WDFIOTARGET Target, _In_ PWD
 	}
 	WdfObjectDelete(Request);
 	return;
+}
+
+void AsyncComEvtIoCancelOnQueue(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request)
+{
+	PREQUEST_CONTEXT req_context;
+	UNREFERENCED_PARAMETER(Queue);
+	req_context = GetRequestContext(Request);
+
+	req_context->status = STATUS_CANCELLED;
+	req_context->information = 0;
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_WRITE, "%s: Trying to cancel a request..", __FUNCTION__);
+	WdfRequestCompleteWithInformation(Request, req_context->status, req_context->information);
+}
+
+void event_occurred(struct asynccom_port *port, ULONG event)
+{
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: event: %d", __FUNCTION__, event);
+	if (!port->current_mask_value) return;
+	if (port->current_mask_value & event) port->current_mask_history |= event;
+	if (port->current_wait_request && port->current_mask_history) complete_current_wait_request(port, STATUS_SUCCESS, sizeof(ULONG), port->current_mask_history);
 }

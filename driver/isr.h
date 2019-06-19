@@ -41,6 +41,10 @@ NTSTATUS		asynccom_port_purge(_In_ struct asynccom_port *port, ULONG mask);
 EVT_WDF_IO_QUEUE_IO_STOP AsyncComEvtIoStop;
 EVT_WDF_USB_READER_COMPLETION_ROUTINE asynccom_port_received_data;
 EVT_WDF_USB_READERS_FAILED FX3EvtReadFailed;
+EVT_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE AsyncComEvtIoCancelOnQueue;
+
 void basic_completion(_In_ WDFREQUEST Request, _In_ WDFIOTARGET Target, _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams, _In_ WDFCONTEXT Context);
+void complete_current_wait_request(struct asynccom_port *port, NTSTATUS status, ULONG info, ULONG matches);
+void event_occurred(struct asynccom_port *port, ULONG event);
 
 #endif

@@ -39,14 +39,16 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 	size_t				bytes_returned = 0;
 	PVOID				buffer = 0;
 	size_t				buffer_size = 0;
+	PREQUEST_CONTEXT	req_context = 0;
 		
     UNREFERENCED_PARAMETER(InputBufferLength);
     UNREFERENCED_PARAMETER(OutputBufferLength);
 
 
-	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "%s: Entering.\n", __FUNCTION__);
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "%s: Received IOCTL: %s\n", __FUNCTION__, get_ioctl_name(IoControlCode));
     device = WdfIoQueueGetDevice(Queue);
 	port = GetPortContext(device);
+	req_context = GetRequestContext(Request);
 
     switch(IoControlCode) {
 	case IOCTL_SERIAL_SET_BAUD_RATE: { 
@@ -371,11 +373,91 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 	case IOCTL_SERIAL_SET_BREAK_OFF: {
 		status = asynccom_port_set_break(port, FALSE);
 		break;
-	}								
-	case IOCTL_SERIAL_SET_QUEUE_SIZE: { status = STATUS_NOT_SUPPORTED; break; } // TODO: This appears to be basically just a memory cap value.
-	case IOCTL_SERIAL_GET_WAIT_MASK: { status = STATUS_NOT_SUPPORTED; break; } // We don't use the ISR, so this has no value.
-	case IOCTL_SERIAL_SET_WAIT_MASK: { status = STATUS_NOT_SUPPORTED; break; } // We don't use the ISR, so this has no value.
-	case IOCTL_SERIAL_WAIT_ON_MASK: { status = STATUS_NOT_SUPPORTED; break; } // We don't use the ISR, so this has no value.
+	}
+	//TODO: Finish this.
+	case IOCTL_SERIAL_SET_QUEUE_SIZE: {
+		//PSERIAL_QUEUE_SIZE Rs;
+		//struct asynccom_memory_cap *memcap = 0;
+
+		status = WdfRequestRetrieveInputBuffer(Request, sizeof(SERIAL_QUEUE_SIZE), &buffer, &buffer_size);
+		if (!NT_SUCCESS(status)) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Could not get request memory buffer %X\n", status);
+			break;
+		}
+		/*
+		//The next line is bad in some capacity.
+		//Rs = (PSERIAL_QUEUE_SIZE)buffer;
+		//memcap->input = (ULONG)(Rs->InSize);
+		//asynccom_port_set_memory_cap(port, memcap);
+		*/
+		req_context->status = status = STATUS_SUCCESS;
+		break;
+	}
+	case IOCTL_SERIAL_GET_WAIT_MASK: {
+		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
+		if (!NT_SUCCESS(status)) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Could not get request output memory buffer %X\n", status);
+		}
+		req_context->data_buffer = buffer;
+		req_context->information = 0;
+		req_context->status = status = STATUS_SUCCESS;
+		break;
+	}
+	case IOCTL_SERIAL_SET_WAIT_MASK: {
+		ULONG new_mask = 0;
+
+		status = WdfRequestRetrieveInputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
+		if (!NT_SUCCESS(status)) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Could not get request output memory buffer %X\n", status);
+		}
+		req_context->data_buffer = buffer;
+		new_mask = *((ULONG *)buffer);
+		TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "Desired event mask: %d", new_mask);
+
+		if (new_mask & ~(	SERIAL_EV_RXCHAR |
+							//SERIAL_EV_RXFLAG |	// NYI
+							SERIAL_EV_TXEMPTY |
+							//SERIAL_EV_CTS |		// Can only be done with polling, NYI
+							//SERIAL_EV_DSR |		// Can only be done with polling, NYI
+							//SERIAL_EV_RLSD |		// Can only be done with polling, NYI
+							//SERIAL_EV_BREAK |		// NYI
+							//SERIAL_EV_ERR |		// NYI
+							//SERIAL_EV_RING |		// NYI
+							//SERIAL_EV_PERR |		// NYI
+							SERIAL_EV_RX80FULL)) 
+		{
+			status = STATUS_INVALID_PARAMETER;
+			break;
+		}
+
+		if(port->current_wait_request != 0) complete_current_wait_request(port, STATUS_SUCCESS, sizeof(ULONG), 0);
+		port->current_mask_value = new_mask;
+		port->current_mask_history = 0;
+
+		break;
+	}
+	case IOCTL_SERIAL_WAIT_ON_MASK: {
+		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
+		if (!NT_SUCCESS(status)) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Could not get request output memory buffer %X\n", status);
+			break;
+		}
+		req_context->data_buffer = buffer;
+		req_context->port = port;
+		if(port->current_mask_value == 0 || port->current_wait_request != 0)
+		{
+			req_context->status = status = STATUS_INVALID_PARAMETER;
+			break;
+		}
+		port->current_wait_request = Request;
+		if (port->current_mask_history)
+		{
+			complete_current_wait_request(port, STATUS_SUCCESS, sizeof(ULONG), port->current_mask_history);
+			break;
+		}
+		request_pending = TRUE;
+		break;
+	}
 	case IOCTL_SERIAL_IMMEDIATE_CHAR: { status = STATUS_NOT_SUPPORTED; break; } // We may be able to implement this - but currently we send every request directly to the Asynccom. This has no current valuable implementation.
     case IOCTL_SERIAL_PURGE: {
         ULONG mask;
@@ -752,6 +834,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
     }
 
     if (request_pending == FALSE) {
+		TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Completing request with: %!STATUS!", status);
 		WdfRequestCompleteWithInformation(Request, status, bytes_returned);
     }
 
@@ -1025,6 +1108,7 @@ unsigned asynccom_port_get_input_memory_usage(struct asynccom_port *port)
 	WdfSpinLockAcquire(port->istream_spinlock);
 	value += asynccom_frame_get_length(port->istream);
 	WdfSpinLockRelease(port->istream_spinlock);
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "%s: size: %d\n", __FUNCTION__, value);
 
 	return value;
 }
@@ -1614,4 +1698,20 @@ BOOLEAN asynccom_port_get_rs485(_In_ struct asynccom_port *port)
 	acr_val = asynccom_port_get_spr_register(port, ACR_OFFSET);
 
 	return ((fcr_val & 0x00040000) && (acr_val & 0x10)) ? TRUE : FALSE;
+}
+
+void asynccom_port_set_memory_cap(struct asynccom_port *port, struct asynccom_memory_cap *value)
+{
+	return_if_untrue(port);
+	return_if_untrue(value);
+
+	if (value->input >= 0) {
+		if (port->memory_cap.input != value->input) {
+			TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "Memory cap (input) %i => %i", port->memory_cap.input, value->input);
+		}
+		else {
+			TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "Memory cap (input) = %i", value->input);
+		}
+		port->memory_cap.input = value->input;
+	}
 }

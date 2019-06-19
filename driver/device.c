@@ -233,6 +233,7 @@ NTSTATUS setup_dpc(_In_ struct asynccom_port *port)
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: process_read_dpc failed %!STATUS!", __FUNCTION__, status);
 		return status;
 	}
+
 	return STATUS_SUCCESS;
 }
 
@@ -319,6 +320,11 @@ NTSTATUS setup_port(_In_ struct asynccom_port *port)
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_INIT, "%s: Error: Can't set port to use 8 bits!\n", __FUNCTION__);
 		return status;
 	}
+	port->current_read_request = 0;
+	port->current_write_request = 0;
+	port->current_wait_request = 0;
+	port->current_mask_value = 0;
+	port->current_mask_history = 0;
 	
 	return status;
 }
@@ -328,8 +334,9 @@ NTSTATUS setup_queues(_In_ struct asynccom_port *port)
     NTSTATUS							status = STATUS_SUCCESS;
     WDF_IO_QUEUE_CONFIG					queue_config;
 
-    WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
+	WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchParallel);
     queue_config.EvtIoDeviceControl = AsyncComEvtIoDeviceControl;
+	queue_config.EvtIoCanceledOnQueue = AsyncComEvtIoCancelOnQueue;
 
     __analysis_assume(queue_config.EvtIoStop != 0);
     status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->ioctl_queue);
@@ -347,6 +354,7 @@ NTSTATUS setup_queues(_In_ struct asynccom_port *port)
     WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
     queue_config.EvtIoWrite = AsyncComEvtIoWrite;
     queue_config.EvtIoStop = AsyncComEvtIoStop;
+	queue_config.EvtIoCanceledOnQueue = AsyncComEvtIoCancelOnQueue;
     //queue_config.EvtIoResume = AsyncComEvtIoResume;
 
     status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->write_queue);
@@ -370,6 +378,7 @@ NTSTATUS setup_queues(_In_ struct asynccom_port *port)
     WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchSequential);
     queue_config.EvtIoRead = AsyncComEvtIoRead;
     queue_config.EvtIoStop = AsyncComEvtIoStop;
+	queue_config.EvtIoCanceledOnQueue = AsyncComEvtIoCancelOnQueue;
     //queue_config.EvtIoResume = AsyncComEvtIoResume;
 
     status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->read_queue);

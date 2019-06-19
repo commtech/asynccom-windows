@@ -47,7 +47,7 @@ struct IcpRsStruct {
 	ULONG icpnum;   //I have to use this in the switch statement because 8.75e-6 becomes 874
 };
 
-
+PCHAR get_ioctl_name(ULONG ioctl_code);
 UINT32 chars_to_u32(const unsigned char *data);
 NTSTATUS calculate_divisor(unsigned long clock_rate, unsigned long sample_rate, long desired_baud, short *divisor);
 int GetICS30703Data(unsigned long desired, unsigned long ppm, struct ResultStruct *theOne, struct IcpRsStruct *theOther, unsigned char *progdata);
