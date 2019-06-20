@@ -50,11 +50,11 @@ VOID AsyncComEvtIoRead(IN WDFQUEUE Queue, IN WDFREQUEST Request, IN size_t Lengt
 
 	status = WdfRequestForwardToIoQueue(Request, port->read_queue2);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfRequestForwardToIoQueue failed: %X", __FUNCTION__, status);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: WdfRequestForwardToIoQueue failed: %X", __FUNCTION__, status);
 		WdfRequestComplete(Request, status);
 		return;
 	}
-	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: Queueing read for %d bytes.", __FUNCTION__, Length);
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_READ, "%s: Queueing read for %d bytes.", __FUNCTION__, Length);
 	WdfDpcEnqueue(port->process_read_dpc);
 }
 
@@ -73,18 +73,18 @@ VOID AsyncComEvtIoWrite(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ size_
 
 	status = WdfRequestForwardToIoQueue(Request, port->write_queue2);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfRequestForwardToIoQueue failed: %X", __FUNCTION__, status);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: WdfRequestForwardToIoQueue failed: %X", __FUNCTION__, status);
 		WdfRequestComplete(Request, status);
 		return;
 	}
 
-	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: Queueing write for %d bytes.", __FUNCTION__, Length);
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_WRITE, "%s: Queueing write for %d bytes.", __FUNCTION__, Length);
 	WdfDpcEnqueue(port->process_write_dpc);
 }
 
 VOID AsyncComEvtIoStop(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ ULONG ActionFlags)
 {
-	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_WRITE, "%s: Entering.", __FUNCTION__);
+	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_PNP, "%s: Entering.", __FUNCTION__);
 	UNREFERENCED_PARAMETER(Queue);
 	UNREFERENCED_PARAMETER(ActionFlags);
 	if (ActionFlags &  WdfRequestStopActionSuspend) {
@@ -116,7 +116,7 @@ void complete_current_read_request(struct asynccom_port *port)
 		// Technically, STATUS_TIMEOUT is inside the realm of 'success' for NT_SUCCESS.
 		// This is just to make sure I don't try to throw data into a bad pointer.
 		if (NT_SUCCESS(context->status)) context->information = asynccom_frame_remove_data(port->istream, (unsigned char *)context->data_buffer, context->length);
-		TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: completing read with %X, info: %d", __FUNCTION__, context->status, (int)context->information);
+		TraceEvents(TRACE_LEVEL_INFORMATION, DBG_READ, "%s: completing read with %X, info: %d", __FUNCTION__, context->status, (int)context->information);
 		WdfRequestCompleteWithInformation(old_request, context->status, context->information);
 	}
 
@@ -135,7 +135,7 @@ void complete_current_write_request(struct asynccom_port *port)
 	{
 		context = GetRequestContext(old_request);
 		if (NT_SUCCESS(context->status)) context->information = context->length;
-		TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: completing write with %X, info: %d", __FUNCTION__, context->status, (int)context->information);
+		TraceEvents(TRACE_LEVEL_INFORMATION, DBG_WRITE, "%s: completing write with %X, info: %d", __FUNCTION__, context->status, (int)context->information);
 		WdfRequestCompleteWithInformation(old_request, context->status, context->information);
 	}
 	return;
@@ -160,6 +160,7 @@ void complete_current_wait_request(struct asynccom_port *port, NTSTATUS status, 
 		WdfRequestCompleteWithInformation(old_request, context->status, context->information);
 	}
 }
+
 int get_next_read_request(struct asynccom_port *port)
 {
 	NTSTATUS status;
@@ -176,7 +177,7 @@ int get_next_read_request(struct asynccom_port *port)
 		port->current_read_request = NULL;
 		// Well, there are no more left, that's why we couldn't get another.
 		if (status == STATUS_NO_MORE_ENTRIES) return 0;
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueRetrieveNextRequest failed: %X", __FUNCTION__, status);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: WdfIoQueueRetrieveNextRequest failed: %X", __FUNCTION__, status);
 		return 0;
 	}
 
@@ -189,7 +190,7 @@ int get_next_read_request(struct asynccom_port *port)
 	context->status = STATUS_UNSUCCESSFUL;
 	status = WdfRequestRetrieveOutputBuffer(port->current_read_request, context->length, (PVOID*)&context->data_buffer, NULL);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfRequestRetrieveOutputBuffer failed %!STATUS!", __FUNCTION__, status);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: WdfRequestRetrieveOutputBuffer failed %!STATUS!", __FUNCTION__, status);
 		context->status = status;
 		complete_current_read_request(port);
 		return 0;
@@ -248,7 +249,7 @@ int get_next_write_request(struct asynccom_port *port)
 	{
 		port->current_write_request = NULL;
 		if (status == STATUS_NO_MORE_ENTRIES) return 0;
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueRetrieveNextRequest failed: %X", __FUNCTION__, status);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: WdfIoQueueRetrieveNextRequest failed: %X", __FUNCTION__, status);
 		return 0;
 	}
 
@@ -261,7 +262,7 @@ int get_next_write_request(struct asynccom_port *port)
 	context->status = STATUS_UNSUCCESSFUL;
 	status = WdfRequestRetrieveInputBuffer(port->current_write_request, context->length, (PVOID*)&context->data_buffer, NULL);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfRequestRetrieveInputBuffer failed %!STATUS!", __FUNCTION__, status);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: WdfRequestRetrieveInputBuffer failed %!STATUS!", __FUNCTION__, status);
 		context->status = status;
 		complete_current_write_request(port);
 		return 0;
@@ -320,7 +321,7 @@ NTSTATUS asynccom_port_data_write(struct asynccom_port *port, const unsigned cha
 	unsigned char *reversed_data = 0, parsed_data[4096] = { 0 };
 	size_t i = 0;
 
-	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "%s: Entering.", __FUNCTION__);
+	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_WRITE, "%s: Entering.", __FUNCTION__);
 
 	return_val_if_untrue(port, STATUS_UNSUCCESSFUL);
 	return_val_if_untrue(data, STATUS_UNSUCCESSFUL);
@@ -348,31 +349,30 @@ NTSTATUS asynccom_port_data_write(struct asynccom_port *port, const unsigned cha
 	attributes.ParentObject = pipe;
 	status = WdfRequestCreate(&attributes, WdfUsbTargetPipeGetIoTarget(pipe), &write_request);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_IOCTL, "%s: Cannot create new write request.\n", __FUNCTION__);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Cannot create new write request.\n", __FUNCTION__);
 		WdfObjectDelete(write_request);
 		return status;
 	}
 	attributes.ParentObject = write_request;
 	status = WdfMemoryCreate(&attributes, NonPagedPool, 0, byte_count*2, &write_memory, NULL);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_IOCTL, "%s: WdfMemoryCreate failed! status: 0x%x\n", __FUNCTION__, status);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: WdfMemoryCreate failed! status: 0x%x\n", __FUNCTION__, status);
 		return status;
 	}
 	status = WdfMemoryCopyFromBuffer(write_memory, 0, (void *)parsed_data, byte_count*2);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_IOCTL, "%s: Cannot copy buffer to memory.\n", __FUNCTION__);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Cannot copy buffer to memory.\n", __FUNCTION__);
 		WdfObjectDelete(write_request);
 		return status;
 	}
 	status = WdfUsbTargetPipeFormatRequestForWrite(pipe, write_request, write_memory, NULL);
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_IOCTL, "%s: Cannot format request for write.\n", __FUNCTION__);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Cannot format request for write.\n", __FUNCTION__);
 		WdfObjectDelete(write_request);
 		return status;
 	}
 
-
-	WdfRequestSetCompletionRoutine(write_request, basic_completion, pipe);
+	//WdfRequestSetCompletionRoutine(write_request, basic_completion, pipe);
 	WdfSpinLockAcquire(port->ostream_spinlock);
 	if (WdfRequestSend(write_request, WdfUsbTargetPipeGetIoTarget(pipe), WDF_NO_SEND_OPTIONS) == FALSE) {
 		WdfSpinLockRelease(port->ostream_spinlock);
@@ -382,8 +382,7 @@ NTSTATUS asynccom_port_data_write(struct asynccom_port *port, const unsigned cha
 	}
 	WdfSpinLockRelease(port->ostream_spinlock);
 
-
-	if (!NT_SUCCESS(status)) TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "%s: Error status: 0x%x.", __FUNCTION__, status);
+	if (!NT_SUCCESS(status)) TraceEvents(TRACE_LEVEL_WARNING, DBG_WRITE, "%s: Error status: 0x%x.", __FUNCTION__, status);
 	if (reversed_data) ExFreePoolWithTag(reversed_data, 'ataD');
 
 	return status;
@@ -407,7 +406,7 @@ void asynccom_port_received_data(__in  WDFUSBPIPE Pipe, __in  WDFMEMORY Buffer, 
 	receive_length = NumBytesTransferred;
 
 	if (port->current_read_request && port->timeouts.ReadIntervalTimeout != 0 && port->timeouts.ReadIntervalTimeout != MAXULONG) WdfTimerStart(port->read_request_interval_timer, WDF_REL_TIMEOUT_IN_MS(port->timeouts.ReadIntervalTimeout));
-	if (receive_length % 2) TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: receive_length not even: %d.", __FUNCTION__, receive_length);
+	if (receive_length % 2) TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: receive_length not even: %d.", __FUNCTION__, receive_length);
 	read_buffer = WdfMemoryGetBuffer(Buffer, &buffer_size);
 
 	payload_size = (size_t)read_buffer[0];
@@ -432,11 +431,15 @@ void asynccom_port_received_data(__in  WDFUSBPIPE Pipe, __in  WDFMEMORY Buffer, 
 
 	if (payload_size + current_memory > memory_cap) {
 		payload_size = memory_cap - current_memory;
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Payload too large, new payload size: %d.", __FUNCTION__, payload_size);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: Payload too large, new payload size: %d.", __FUNCTION__, payload_size);
+	}
+	if (payload_size < 1) {
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: No room left!", __FUNCTION__);
+		return;
 	}
 	if (payload_size < receive_length - 1) memmove(read_buffer, read_buffer + 2, payload_size);
 	else {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Payload larger than buffer: Payload: %d, Receive Length: %d.", __FUNCTION__, payload_size, receive_length);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: Payload larger than buffer: Payload: %d, Receive Length: %d.", __FUNCTION__, payload_size, receive_length);
 		return;
 	}
 
@@ -447,7 +450,7 @@ void asynccom_port_received_data(__in  WDFUSBPIPE Pipe, __in  WDFMEMORY Buffer, 
 	if (asynccom_port_get_input_memory_usage(port) >(asynccom_port_get_input_memory_cap(port)*.8)) event_occurred(port, SERIAL_EV_RX80FULL);
 	event_occurred(port, SERIAL_EV_RXCHAR);
 
-	if (status == FALSE) TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Failed to add data to istream.", __FUNCTION__);
+	if (status == FALSE) TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: Failed to add data to istream.", __FUNCTION__);
 	else TraceEvents(TRACE_LEVEL_INFORMATION, DBG_WRITE, "%s: Stream <= %i byte%s", __FUNCTION__, (int)payload_size, (payload_size == 1) ? " " : "s");
 	rejected_last_stream = 0;
 	WdfDpcEnqueue(port->process_read_dpc);
@@ -460,7 +463,7 @@ BOOLEAN FX3EvtReadFailed(WDFUSBPIPE Pipe, NTSTATUS Status, USBD_STATUS UsbdStatu
 	UNREFERENCED_PARAMETER(UsbdStatus);
 	UNREFERENCED_PARAMETER(Pipe);
 
-	TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Data ContinuousReader failed - did you unplug?", __FUNCTION__);
+	TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Data ContinuousReader failed - did you unplug?", __FUNCTION__);
 	return TRUE;
 }
 
@@ -473,8 +476,9 @@ void serial_read_timeout(IN WDFTIMER Timer)
 	if (!port) return;
 	WdfTimerStop(port->read_request_total_timer, FALSE);
 	WdfTimerStop(port->read_request_interval_timer, FALSE);
-	TraceEvents(TRACE_LEVEL_WARNING, DBG_WRITE, "%s: Timer expired!", __FUNCTION__);
+	TraceEvents(TRACE_LEVEL_WARNING, DBG_READ, "%s: Timer expired!", __FUNCTION__);
 	if (port->current_read_request) {
+		TraceEvents(TRACE_LEVEL_WARNING, DBG_READ, "%s: Read still exists, timing out.", __FUNCTION__);
 		context = GetRequestContext(port->current_read_request);
 		context->status = STATUS_TIMEOUT;
 		complete_current_read_request(port);
@@ -522,7 +526,7 @@ void basic_completion(_In_ WDFREQUEST Request, _In_ WDFIOTARGET Target, _In_ PWD
 	status = CompletionParams->IoStatus.Status;
 
 	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: Read failed: Request status: 0x%x, UsbdStatus: 0x%x\n", __FUNCTION__, status, usb_completion_params->UsbdStatus);
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Read failed: Request status: 0x%x, UsbdStatus: 0x%x\n", __FUNCTION__, status, usb_completion_params->UsbdStatus);
 	}
 	WdfObjectDelete(Request);
 	return;
@@ -536,7 +540,7 @@ void AsyncComEvtIoCancelOnQueue(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request)
 
 	req_context->status = STATUS_CANCELLED;
 	req_context->information = 0;
-	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_WRITE, "%s: Trying to cancel a request..", __FUNCTION__);
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: Trying to cancel a request..", __FUNCTION__);
 	WdfRequestCompleteWithInformation(Request, req_context->status, req_context->information);
 }
 

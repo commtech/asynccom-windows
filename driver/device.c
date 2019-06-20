@@ -320,9 +320,9 @@ NTSTATUS setup_port(_In_ struct asynccom_port *port)
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_INIT, "%s: Error: Can't set port to use 8 bits!\n", __FUNCTION__);
 		return status;
 	}
-	port->current_read_request = 0;
-	port->current_write_request = 0;
-	port->current_wait_request = 0;
+	port->current_read_request = NULL;
+	port->current_write_request = NULL;
+	port->current_wait_request = NULL;
 	port->current_mask_value = 0;
 	port->current_mask_history = 0;
 	
