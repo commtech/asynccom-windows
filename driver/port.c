@@ -398,9 +398,8 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		if (!NT_SUCCESS(status)) {
 			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Could not get request output memory buffer %X\n", status);
 		}
-		req_context->data_buffer = buffer;
-		req_context->information = 0;
-		req_context->status = status = STATUS_SUCCESS;
+		*(PULONG)buffer = port->current_mask_value;
+		bytes_returned = sizeof(ULONG);
 		break;
 	}
 	case IOCTL_SERIAL_SET_WAIT_MASK: {
@@ -495,7 +494,6 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		break;
 	}
     case IOCTL_SERIAL_GET_MODEMSTATUS: {
-        
         status = WdfRequestRetrieveOutputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
         if (!NT_SUCCESS(status)) {
             TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_GET_MODEMSTATUS: WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
@@ -503,7 +501,6 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
         }
         *(PULONG)buffer = asynccom_port_modem_status(port);
         bytes_returned = sizeof(ULONG);
-        
         break;
     } 
 	case IOCTL_SERIAL_GET_DTRRTS: {
