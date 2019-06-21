@@ -1,5 +1,12 @@
 # ChangeLog
 
+## [2.0.9](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.9) (06/21/2019)
+- Made the IOCTL queue parallel, allowing more terminal program support.
+- Partially implemented GET_WAIT_MASK, SET_WAIT_MASK, and WAIT_ON_MASK.
+
+## [2.0.8](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.8) (05/31/2019)
+- Fixed a bug that caused reading and writing to be slower than intended.
+
 ## [2.0.7](https://github.com/commtech/asynccom-windows/releases/tag/v2.0.7) (04/02/2019)
 - Updated to the MIT license.
 
