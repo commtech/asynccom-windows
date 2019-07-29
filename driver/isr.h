@@ -27,13 +27,14 @@ THE SOFTWARE.
 #include <wdf.h>
 
 #include "trace.h"
+#include "utils.h"
 
 EVT_WDF_DPC		AsynccomProcessRead;
 EVT_WDF_DPC		AsynccomProcessWrite;
 
 NTSTATUS		asynccom_port_data_write(struct asynccom_port *port, const unsigned char *data, unsigned byte_count);
 void			serial_read_timeout(IN WDFTIMER Timer);
-int				get_next_read_request(struct asynccom_port *port);
+//int				get_next_read_request(struct asynccom_port *port);
 void			complete_current_read_request(struct asynccom_port *port);
 void			complete_current_write_request(struct asynccom_port *port);
 NTSTATUS		asynccom_port_purge(_In_ struct asynccom_port *port, ULONG mask);
@@ -46,5 +47,8 @@ EVT_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE AsyncComEvtIoCancelOnQueue;
 void basic_completion(_In_ WDFREQUEST Request, _In_ WDFIOTARGET Target, _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams, _In_ WDFCONTEXT Context);
 void complete_current_wait_request(struct asynccom_port *port, NTSTATUS status, ULONG info, ULONG matches);
 void event_occurred(struct asynccom_port *port, ULONG event);
+void process_timeouts(struct asynccom_port *port);
+void process_read(struct asynccom_port *port);
+int get_next_request(struct asynccom_port *port, WDFQUEUE Queue, WDFREQUEST *Request);
 
 #endif

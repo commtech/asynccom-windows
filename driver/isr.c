@@ -36,6 +36,7 @@ VOID AsyncComEvtIoRead(IN WDFQUEUE Queue, IN WDFREQUEST Request, IN size_t Lengt
 {
 	struct asynccom_port *port = 0;
 	NTSTATUS status = STATUS_SUCCESS;
+	PREQUEST_CONTEXT context;
 
 	if (Length == 0) {
 		WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, Length);
@@ -45,6 +46,18 @@ VOID AsyncComEvtIoRead(IN WDFQUEUE Queue, IN WDFREQUEST Request, IN size_t Lengt
 	port = GetPortContext(WdfIoQueueGetDevice(Queue));
 	if (!port) {
 		WdfRequestComplete(Request, STATUS_UNSUCCESSFUL);
+		return;
+	}
+	context = GetRequestContext(Request);
+	context->length = Length;
+	context->information = 0;
+	context->status = STATUS_UNSUCCESSFUL;
+	context->major_function = IRP_MJ_READ;
+	status = WdfRequestRetrieveOutputBuffer(Request, context->length, (PVOID*)&context->data_buffer, NULL);
+	if (!NT_SUCCESS(status)) {
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: WdfRequestRetrieveOutputBuffer failed %!STATUS!", __FUNCTION__, status);
+		context->status = status;
+		WdfRequestComplete(Request, status);
 		return;
 	}
 
@@ -66,11 +79,11 @@ VOID AsyncComEvtIoWrite(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ size_
 	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_WRITE, "%s: Entering.", __FUNCTION__);
 
 	port = GetPortContext(WdfIoQueueGetDevice(Queue));
+	
 	if (Length == 0) {
 		WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, Length);
 		return;
 	}
-
 	status = WdfRequestForwardToIoQueue(Request, port->write_queue2);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: WdfRequestForwardToIoQueue failed: %X", __FUNCTION__, status);
@@ -87,6 +100,7 @@ VOID AsyncComEvtIoStop(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ ULONG 
 	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_PNP, "%s: Entering.", __FUNCTION__);
 	UNREFERENCED_PARAMETER(Queue);
 	UNREFERENCED_PARAMETER(ActionFlags);
+
 	if (ActionFlags &  WdfRequestStopActionSuspend) {
 		WdfRequestStopAcknowledge(Request, FALSE); // Don't requeue
 	}
@@ -100,7 +114,7 @@ void complete_current_read_request(struct asynccom_port *port)
 {
 	WDFREQUEST old_request = NULL;
 	PREQUEST_CONTEXT context;
-
+	
 	old_request = port->current_read_request;
 	port->current_read_request = NULL;
 
@@ -161,11 +175,11 @@ void complete_current_wait_request(struct asynccom_port *port, NTSTATUS status, 
 	}
 }
 
+/*
 int get_next_read_request(struct asynccom_port *port)
 {
 	NTSTATUS status;
 	PREQUEST_CONTEXT context;
-	WDF_REQUEST_PARAMETERS params;
 
 	// We already have a request! Tell them we have one.
 	if (port->current_read_request) return 1;
@@ -183,11 +197,6 @@ int get_next_read_request(struct asynccom_port *port)
 
 	// Initialize the context for the new request.
 	context = GetRequestContext(port->current_read_request);
-	WDF_REQUEST_PARAMETERS_INIT(&params);
-	WdfRequestGetParameters(port->current_read_request, &params);
-	context->length = (unsigned)params.Parameters.Read.Length;
-	context->information = 0;
-	context->status = STATUS_UNSUCCESSFUL;
 	status = WdfRequestRetrieveOutputBuffer(port->current_read_request, context->length, (PVOID*)&context->data_buffer, NULL);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: WdfRequestRetrieveOutputBuffer failed %!STATUS!", __FUNCTION__, status);
@@ -197,12 +206,13 @@ int get_next_read_request(struct asynccom_port *port)
 	}
 
 	// If ReadIntervalTimeout, ReadTotalTimeoutMultiplier, and ReadTotalTimeoutConstant are all zero, read operations never time out.
-	if (port->timeouts.ReadIntervalTimeout == 0 && port->timeouts.ReadTotalTimeoutConstant == 0 && port->timeouts.ReadTotalTimeoutMultiplier == 0) {
+	//if (port->timeouts.ReadIntervalTimeout == 0 && port->timeouts.ReadTotalTimeoutConstant == 0 && port->timeouts.ReadTotalTimeoutMultiplier == 0) {
 		// Just in case.
 		WdfTimerStop(port->read_request_total_timer, FALSE);
 		WdfTimerStop(port->read_request_interval_timer, FALSE);
-		return 1;
-	}
+		//return 1;
+	//}
+	if (port->timeouts.ReadIntervalTimeout == 0 && port->timeouts.ReadTotalTimeoutConstant == 0 && port->timeouts.ReadTotalTimeoutMultiplier == 0) return 1;
 
 	//	If ReadIntervalTimeout is set to MAXULONG, and both ReadTotalTimeoutConstant and ReadTotalTimeoutMultiplier are zero, 
 	// a read request completes immediately with the bytes that have already been received, even if no bytes have been received.
@@ -217,12 +227,12 @@ int get_next_read_request(struct asynccom_port *port)
 		|| (port->timeouts.ReadTotalTimeoutMultiplier != 0 && port->timeouts.ReadTotalTimeoutMultiplier != MAXULONG))
 		WdfTimerStart(port->read_request_total_timer, WDF_REL_TIMEOUT_IN_MS((context->length * port->timeouts.ReadTotalTimeoutMultiplier) + port->timeouts.ReadTotalTimeoutConstant));
 
-	/* TODO:
-	If both ReadIntervalTimeout and ReadTotalTimeoutMultiplier are set to MAXULONG, and ReadTotalTimeoutConstant is set to a value greater than zero and less than MAXULONG, a read request behaves as follows:
-	If there are any bytes in the serial port's input buffer, the read request completes immediately with the bytes that are in the buffer and returns the STATUS_SUCCESS status code.
-	If there are no bytes in the input buffer, the serial port waits until a byte arrives, and then immediately completes the read request with the one byte of data and returns the STATUS_SUCCESS status code.
-	If no bytes arrive within the time specified by ReadTotalTimeoutConstant, the read request times out, sets the Information field of the I/O status block to zero, and returns the STATUS_TIMEOUT status code.
-	*/
+	//TODO:
+	//If both ReadIntervalTimeout and ReadTotalTimeoutMultiplier are set to MAXULONG, and ReadTotalTimeoutConstant is set to a value greater than zero and less than MAXULONG, a read request behaves as follows:
+	//If there are any bytes in the serial port's input buffer, the read request completes immediately with the bytes that are in the buffer and returns the STATUS_SUCCESS status code.
+	//If there are no bytes in the input buffer, the serial port waits until a byte arrives, and then immediately completes the read request with the one byte of data and returns the STATUS_SUCCESS status code.
+	//If no bytes arrive within the time specified by ReadTotalTimeoutConstant, the read request times out, sets the Information field of the I/O status block to zero, and returns the STATUS_TIMEOUT status code.
+	//
 
 	// Interval timer isn't enabled until the first byte is received.
 	// With that in mind, I feel no need to address the interval timer in this function.
@@ -234,7 +244,7 @@ int get_next_read_request(struct asynccom_port *port)
 
 	return 1;
 }
-
+*/
 int get_next_write_request(struct asynccom_port *port)
 {
 	NTSTATUS status;
@@ -277,17 +287,11 @@ void AsynccomProcessRead(WDFDPC Dpc)
 	PREQUEST_CONTEXT context = NULL;
 
 	port = GetPortContext(WdfDpcGetParentObject(Dpc));
-	if (!get_next_read_request(port)) return;
-
-	if (asynccom_frame_is_empty(port->istream)) return;
+	if (!get_next_request(port, port->read_queue2, &port->current_read_request)) return;
 	context = GetRequestContext(port->current_read_request);
-	if (!context) return;
-	if ((asynccom_frame_get_length(port->istream) >= context->length)) {
-		context->status = STATUS_SUCCESS;
-		complete_current_read_request(port);
-	}
-
-	return;
+	if (context->ioctl_code == IOCTL_SERIAL_SET_TIMEOUTS) process_timeouts(port);
+	if (context->major_function == IRP_MJ_READ) process_read(port);
+	if (!IsQueueEmpty(port->read_queue2) && !port->current_read_request) WdfDpcEnqueue(port->process_read_dpc);
 }
 
 void AsynccomProcessWrite(WDFDPC Dpc)
@@ -476,9 +480,7 @@ void serial_read_timeout(IN WDFTIMER Timer)
 	if (!port) return;
 	WdfTimerStop(port->read_request_total_timer, FALSE);
 	WdfTimerStop(port->read_request_interval_timer, FALSE);
-	TraceEvents(TRACE_LEVEL_WARNING, DBG_READ, "%s: Timer expired!", __FUNCTION__);
 	if (port->current_read_request) {
-		TraceEvents(TRACE_LEVEL_WARNING, DBG_READ, "%s: Read still exists, timing out.", __FUNCTION__);
 		context = GetRequestContext(port->current_read_request);
 		context->status = STATUS_TIMEOUT;
 		complete_current_read_request(port);
@@ -541,6 +543,7 @@ void AsyncComEvtIoCancelOnQueue(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request)
 	req_context->status = STATUS_CANCELLED;
 	req_context->information = 0;
 	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: Trying to cancel a request..", __FUNCTION__);
+	DbgPrint("%s: Cancelled? request end: %p\n", __FUNCTION__, Request);
 	WdfRequestCompleteWithInformation(Request, req_context->status, req_context->information);
 }
 
@@ -550,4 +553,84 @@ void event_occurred(struct asynccom_port *port, ULONG event)
 	if (!port->current_mask_value) return;
 	if (port->current_mask_value & event) port->current_mask_history |= event;
 	if (port->current_wait_request && port->current_mask_history) complete_current_wait_request(port, STATUS_SUCCESS, sizeof(ULONG), port->current_mask_history);
+}
+
+void process_timeouts(struct asynccom_port *port)
+{
+	WDFREQUEST old_request = NULL;
+	PREQUEST_CONTEXT context;
+	PSERIAL_TIMEOUTS new_timeouts;
+	PVOID buffer = 0;
+	size_t buffer_size = 0;
+
+	old_request = port->current_read_request;
+	port->current_read_request = NULL;
+
+	if (old_request)
+	{
+		context = GetRequestContext(old_request);
+		context->status = WdfRequestRetrieveInputBuffer(old_request, sizeof(SERIAL_TIMEOUTS), &buffer, &buffer_size);
+		if (NT_SUCCESS(context->status)) {
+			new_timeouts = (PSERIAL_TIMEOUTS)buffer;
+			port->timeouts.ReadIntervalTimeout = new_timeouts->ReadIntervalTimeout;
+			port->timeouts.ReadTotalTimeoutMultiplier = new_timeouts->ReadTotalTimeoutMultiplier;
+			port->timeouts.ReadTotalTimeoutConstant = new_timeouts->ReadTotalTimeoutConstant;
+			port->timeouts.WriteTotalTimeoutConstant = new_timeouts->WriteTotalTimeoutConstant;
+			port->timeouts.WriteTotalTimeoutMultiplier = new_timeouts->WriteTotalTimeoutMultiplier;
+		}
+		WdfRequestCompleteWithInformation(old_request, context->status, context->information);
+	}
+}
+
+int get_next_request(struct asynccom_port *port, WDFQUEUE Queue, WDFREQUEST *Request)
+{
+	NTSTATUS status;
+	PREQUEST_CONTEXT context;
+
+	if (*Request) return 1;
+	status = WdfIoQueueRetrieveNextRequest(Queue, Request);
+	if (!NT_SUCCESS(status))
+	{
+		*Request = NULL;
+		if (status == STATUS_NO_MORE_ENTRIES) return 0;
+		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: WdfIoQueueRetrieveNextRequest failed: %X", __FUNCTION__, status);
+		return 0;
+	}
+	context = GetRequestContext(*Request);
+	if (context->major_function != IRP_MJ_READ) return 1;
+
+	WdfTimerStop(port->read_request_total_timer, FALSE);
+	WdfTimerStop(port->read_request_interval_timer, FALSE);
+
+	// No timeouts are used - wait for data indefinitely.
+	if (port->timeouts.ReadIntervalTimeout == 0 && port->timeouts.ReadTotalTimeoutConstant == 0 && port->timeouts.ReadTotalTimeoutMultiplier == 0) return 1;
+
+	// Return immediately, even with nothing.
+	if (port->timeouts.ReadIntervalTimeout == MAXULONG && port->timeouts.ReadTotalTimeoutConstant == 0 && port->timeouts.ReadTotalTimeoutMultiplier == 0) {
+		context->status = STATUS_SUCCESS;
+		complete_current_read_request(port);
+		return 0;
+	}
+
+	if ((port->timeouts.ReadTotalTimeoutConstant != 0 && port->timeouts.ReadTotalTimeoutConstant != MAXULONG)
+		|| (port->timeouts.ReadTotalTimeoutMultiplier != 0 && port->timeouts.ReadTotalTimeoutMultiplier != MAXULONG))
+		WdfTimerStart(port->read_request_total_timer, WDF_REL_TIMEOUT_IN_MS((context->length * port->timeouts.ReadTotalTimeoutMultiplier) + port->timeouts.ReadTotalTimeoutConstant));
+
+	if ((port->timeouts.ReadIntervalTimeout != 0) && (port->timeouts.ReadIntervalTimeout != MAXULONG))
+		WdfTimerStart(port->read_request_interval_timer, WDF_REL_TIMEOUT_IN_MS(port->timeouts.ReadIntervalTimeout));
+
+	return 1;
+}
+
+void process_read(struct asynccom_port *port)
+{
+	PREQUEST_CONTEXT context;
+	
+	context = GetRequestContext(port->current_read_request);
+	if (asynccom_frame_is_empty(port->istream)) return;
+	if ((asynccom_frame_get_length(port->istream) >= context->length))
+	{
+		context->status = STATUS_SUCCESS;
+		complete_current_read_request(port);
+	}
 }
