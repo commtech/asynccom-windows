@@ -45,7 +45,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     WPP_INIT_TRACING( DriverObject, RegistryPath );
     TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Async Com Driver\n");
     TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Built %s %s\n", __DATE__, __TIME__);
-	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Copyright (c) 2016, Fastcom.");
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Copyright (c) 2019, Fastcom.");
   
 	ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
 	WDF_DRIVER_CONFIG_INIT(&config, AsyncComEvtDeviceAdd);
