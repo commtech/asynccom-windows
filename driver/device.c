@@ -115,7 +115,7 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 	WdfDeviceInitSetIoType(DeviceInit, WdfDeviceIoBuffered);
 
 	WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attributes, ASYNCCOM_PORT);
-	attributes.EvtCleanupCallback = OsrFxEvtDriverContextCleanup;
+	attributes.EvtCleanupCallback = AsyncComEvtDeviceContextCleanup;
 	attributes.SynchronizationScope = WdfSynchronizationScopeDevice;
 	status = WdfDeviceCreate(&DeviceInit, &attributes, &device);
 	if (!NT_SUCCESS(status)) {
@@ -337,6 +337,7 @@ NTSTATUS setup_queues(_In_ struct asynccom_port *port)
 	WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchParallel);
     queue_config.EvtIoDeviceControl = AsyncComEvtIoDeviceControl;
 	queue_config.EvtIoCanceledOnQueue = AsyncComEvtIoCancelOnQueue;
+	queue_config.EvtIoStop = AsyncComEvtIoStop;
 
     __analysis_assume(queue_config.EvtIoStop != 0);
     status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->ioctl_queue);
@@ -914,4 +915,16 @@ BOOLEAN SerialGetFdoRegistryKeyValue(IN PWDFDEVICE_INIT DeviceInit, __in PCWSTR 
 		Name, *Value);
 
 	return retValue;
+}
+
+VOID AsyncComEvtDeviceContextCleanup(WDFDEVICE Device)
+{
+	struct asynccom_port *port = 0;
+	port = GetPortContext(Device);
+	DbgPrint("%s: Closing port.\n", __FUNCTION__);
+	WdfTimerStop(port->read_request_total_timer, TRUE);
+	WdfTimerStop(port->read_request_interval_timer, TRUE);
+	if (port->current_wait_request != 0) complete_current_wait_request(port, STATUS_CANCELLED, sizeof(ULONG), 0);
+	if (port->current_read_request != 0) complete_current_read_request(port);
+	if (port->current_write_request != 0) complete_current_write_request(port);
 }

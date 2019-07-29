@@ -36,6 +36,7 @@ EVT_WDF_DEVICE_PREPARE_HARDWARE AsyncComEvtDevicePrepareHardware;
 EVT_WDF_DEVICE_RELEASE_HARDWARE AsyncComEvtDeviceReleaseHardware;
 EVT_WDF_IO_QUEUE_IO_WRITE AsyncComEvtIoWrite;
 EVT_WDF_IO_QUEUE_IO_READ AsyncComEvtIoRead;
+EVT_WDF_DEVICE_CONTEXT_CLEANUP AsyncComEvtDeviceContextCleanup;
 
 NTSTATUS setup_spinlocks(_In_ struct asynccom_port *port);
 NTSTATUS setup_dpc(_In_ struct asynccom_port *port);
