@@ -62,6 +62,9 @@ NTSTATUS			asynccom_port_set_autodsr(_In_ struct asynccom_port *port, BOOLEAN on
 NTSTATUS			asynccom_port_set_autocts(_In_ struct asynccom_port *port, BOOLEAN onoff);
 NTSTATUS			asynccom_port_set_autorts(_In_ struct asynccom_port *port, BOOLEAN onoff);
 
+NTSTATUS			asynccom_port_set_rts(_In_ struct asynccom_port *port, BOOLEAN rts);
+NTSTATUS			asynccom_port_set_dtr(_In_ struct asynccom_port *port, BOOLEAN dtr);
+
 NTSTATUS			asynccom_port_set_flowcontrol(_In_ struct asynccom_port *port, PSERIAL_HANDFLOW handflow);
 
 NTSTATUS			asynccom_port_get_properties(_In_ struct asynccom_port *port, PSERIAL_COMMPROP Properties);
@@ -81,7 +84,12 @@ UINT32				asynccom_port_get_rx_trigger(_In_ struct asynccom_port *port);
 NTSTATUS			asynccom_port_set_isochronous(_In_ struct asynccom_port *port, int mode);
 int					asynccom_port_get_isochronous(_In_ struct asynccom_port *port);
 
-NTSTATUS			asynccom_port_set_xonoff(_In_ struct asynccom_port *port, BOOLEAN onoff);
+NTSTATUS			asynccom_port_set_xonoff_transmit(_In_ struct asynccom_port *port, BOOLEAN onoff);
+NTSTATUS			asynccom_port_set_xonoff_receive(_In_ struct asynccom_port *port, BOOLEAN onoff);
+
+NTSTATUS			asynccom_port_set_xoff_char(_In_ struct asynccom_port *port, unsigned char xoff);
+NTSTATUS			asynccom_port_set_xon_char(_In_ struct asynccom_port *port, unsigned char xon);
+
 NTSTATUS			asynccom_port_set_sample_rate(_In_ struct asynccom_port *port, unsigned rate);
 NTSTATUS			asynccom_port_set_isochronous(_In_ struct asynccom_port *port, int mode);
 NTSTATUS			asynccom_port_set_break(_In_ struct asynccom_port *port, BOOLEAN onoff);
@@ -90,5 +98,7 @@ void				asynccom_port_set_clock_bits(_In_ struct asynccom_port *port, unsigned c
 NTSTATUS            asynccom_port_get_status(_In_ struct asynccom_port *port, PSERIAL_STATUS settings);
 ULONG               asynccom_port_modem_status(_In_ struct asynccom_port *port);
 void				asynccom_port_set_memory_cap(struct asynccom_port *port, struct asynccom_memory_cap *value);
+
+NTSTATUS			calculate_divisor(unsigned long clock_rate, unsigned long sample_rate, long desired_baud, short *divisor);
 
 #endif

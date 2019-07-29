@@ -36,7 +36,6 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
     BOOLEAN             request_pending = FALSE;
 	NTSTATUS            status = STATUS_INVALID_DEVICE_REQUEST; 
 	struct asynccom_port	*port = 0;
-	size_t				bytes_returned = 0;
 	PVOID				buffer = 0;
 	size_t				buffer_size = 0;
 	PREQUEST_CONTEXT	req_context = 0;
@@ -46,12 +45,16 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 
 
 	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "%s: Received IOCTL: %s\n", __FUNCTION__, get_ioctl_name(IoControlCode));
+	DbgPrint("%s: Request: %p, IOCTL: %s\n", __FUNCTION__, Request, get_ioctl_name(IoControlCode));
     device = WdfIoQueueGetDevice(Queue);
 	port = GetPortContext(device);
 	req_context = GetRequestContext(Request);
-
+	req_context->ioctl_code = IoControlCode;
+	req_context->major_function = IRP_MJ_DEVICE_CONTROL;
+	req_context->information = 0;
+	req_context->status = STATUS_UNSUCCESSFUL;
     switch(IoControlCode) {
-	case IOCTL_SERIAL_SET_BAUD_RATE: { 
+	case IOCTL_SERIAL_SET_BAUD_RATE: {
 		ULONG desired_baud = 0;
 		SHORT required_divisor = 0;
 
@@ -84,7 +87,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		}
 		baud_rate = (PSERIAL_BAUD_RATE)buffer;
 		baud_rate->BaudRate = port->current_baud;
-		bytes_returned = sizeof(SERIAL_BAUD_RATE);
+		req_context->information = sizeof(SERIAL_BAUD_RATE);
 		break; 
 	}
 	case IOCTL_SERIAL_GET_MODEM_CONTROL: {
@@ -94,7 +97,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*((PUINT32)buffer) = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET);
-		bytes_returned = sizeof(UINT32);
+		req_context->information = sizeof(UINT32);
 		break;
 	}
 	case IOCTL_SERIAL_SET_MODEM_CONTROL: { 
@@ -115,7 +118,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, FCR_OFFSET, *((UCHAR *)(buffer)));
 		break;  
 	}
-	case IOCTL_SERIAL_SET_LINE_CONTROL: { 
+	case IOCTL_SERIAL_SET_LINE_CONTROL: {
 		PSERIAL_LINE_CONTROL line_control;
         unsigned char line_data = 0, line_stop = 0, line_parity = 0;
 		unsigned char mask = 0xff;
@@ -244,27 +247,32 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 
         current_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
 
-        if ((current_lcr & 0x03) == 0x03) line_control->WordLength = 8;
-        else if ((current_lcr & 0x03) == 0x02) line_control->WordLength = 7;
-        else if ((current_lcr & 0x03) == 0x01) line_control->WordLength = 6;
+        if		((current_lcr & SERIAL_DATA_MASK) == SERIAL_8_DATA) line_control->WordLength = 8;
+        else if ((current_lcr & SERIAL_DATA_MASK) == SERIAL_7_DATA) line_control->WordLength = 7;
+        else if ((current_lcr & SERIAL_DATA_MASK) == SERIAL_6_DATA) line_control->WordLength = 6;
         else line_control->WordLength = 5;
 
-        if ((current_lcr & 0x38) == 0x38) line_control->Parity = SPACE_PARITY;
-        else if ((current_lcr & 0x38) == 0x28) line_control->Parity = MARK_PARITY;
-        else if ((current_lcr & 0x38) == 0x18) line_control->Parity = EVEN_PARITY;
-        else if ((current_lcr & 0x38) == 0x08) line_control->Parity = ODD_PARITY;
+        if ((current_lcr & SERIAL_PARITY_MASK) == SERIAL_SPACE_PARITY) line_control->Parity = SPACE_PARITY;
+        else if ((current_lcr & SERIAL_PARITY_MASK) == SERIAL_MARK_PARITY) line_control->Parity = MARK_PARITY;
+        else if ((current_lcr & SERIAL_PARITY_MASK) == SERIAL_EVEN_PARITY) line_control->Parity = EVEN_PARITY;
+        else if ((current_lcr & SERIAL_PARITY_MASK) == SERIAL_ODD_PARITY) line_control->Parity = ODD_PARITY;
         else line_control->Parity = NO_PARITY;
 
-        if ((current_lcr & 0x04) == 0x04) {
+        if ((current_lcr & SERIAL_2_STOP) == SERIAL_2_STOP) {
             if (line_control->WordLength == 5) line_control->StopBits = STOP_BITS_1_5;
             else line_control->StopBits = STOP_BITS_2;
         }
         else line_control->StopBits = STOP_BIT_1;
 
-		bytes_returned = sizeof(SERIAL_LINE_CONTROL); // SERIAL_LINE_CONTROL
+		req_context->information = sizeof(SERIAL_LINE_CONTROL); // SERIAL_LINE_CONTROL
 		break; 
 	}
-	case IOCTL_SERIAL_SET_TIMEOUTS: { 
+	case IOCTL_SERIAL_SET_TIMEOUTS: {
+		// Maybe this should be added to the read queue
+		// and the read function should determine if the request
+		// is an actual read, or a timeout change.
+		// that would keep it from happening while a read is
+		// pending
 		PSERIAL_TIMEOUTS new_timeouts;
 
 		status = WdfRequestRetrieveInputBuffer(Request, sizeof(SERIAL_TIMEOUTS), &buffer, &buffer_size);
@@ -280,11 +288,13 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			status = STATUS_INVALID_PARAMETER;
 			break;
 		}
-		port->timeouts.ReadIntervalTimeout = new_timeouts->ReadIntervalTimeout;
-		port->timeouts.ReadTotalTimeoutMultiplier = new_timeouts->ReadTotalTimeoutMultiplier;
-		port->timeouts.ReadTotalTimeoutConstant = new_timeouts->ReadTotalTimeoutConstant;
-		port->timeouts.WriteTotalTimeoutConstant = new_timeouts->WriteTotalTimeoutConstant;
-		port->timeouts.WriteTotalTimeoutMultiplier = new_timeouts->WriteTotalTimeoutMultiplier;
+		status = WdfRequestForwardToIoQueue(Request, port->read_queue2);
+		if (!NT_SUCCESS(status)) {
+			TraceEvents(TRACE_LEVEL_ERROR, DBG_IOCTL, "%s: WdfRequestForwardToIoQueue failed: %X", __FUNCTION__, status);
+			return;
+		}
+		request_pending = TRUE;
+		WdfDpcEnqueue(port->process_read_dpc);
 		break;
 	}
 	case IOCTL_SERIAL_GET_TIMEOUTS: { 
@@ -294,7 +304,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*((PSERIAL_TIMEOUTS)buffer) = port->timeouts;
-		bytes_returned = sizeof(SERIAL_TIMEOUTS);
+		req_context->information = sizeof(SERIAL_TIMEOUTS);
 		break; 
 	}
 	case IOCTL_SERIAL_SET_CHARS: {
@@ -312,8 +322,17 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 				break;
 			}
 		}
+		status = asynccom_port_set_xoff_char(port, NewChars->XoffChar);
+		if (!NT_SUCCESS(status)) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_SET_CHARS: Can't set XOFF!");
+			break;
+		}
+		status = asynccom_port_set_xon_char(port, NewChars->XonChar);
+		if (!NT_SUCCESS(status)) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_SET_CHARS: Can't set XON!");
+			break;
+		}
 		port->special_chars = *NewChars;
-		// TODO: Add 'chars' using SerialSetChars?
 		break;
 	}
 	case IOCTL_SERIAL_GET_CHARS: {
@@ -325,45 +344,29 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		}
 
 		*((PSERIAL_CHARS)buffer) = port->special_chars;
-		bytes_returned = sizeof(SERIAL_CHARS);
+		req_context->information = sizeof(SERIAL_CHARS);
 
 		break;
 	}
 	case IOCTL_SERIAL_SET_DTR:
 	case IOCTL_SERIAL_CLR_DTR: {
-		UINT32 new_mcr = 0x00;
-		
-		if ((port->HandFlow.ControlHandShake & SERIAL_DTR_MASK) == SERIAL_DTR_HANDSHAKE) status = STATUS_INVALID_PARAMETER; 
-		else {
-			new_mcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET);
-			if (IoControlCode == IOCTL_SERIAL_SET_DTR) new_mcr |= 0x01;
-			else new_mcr &= ~0x01;
-			status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET, new_mcr);
-			if (NT_SUCCESS(status)) { port->current_mcr = new_mcr; }
-		}
+		status = asynccom_port_set_dtr(port, IoControlCode == IOCTL_SERIAL_SET_DTR ? TRUE : FALSE);
 		break;
 	}
 	case IOCTL_SERIAL_RESET_DEVICE: { break; }
 	case IOCTL_SERIAL_SET_RTS:
 	case IOCTL_SERIAL_CLR_RTS: {
-		UINT32 new_mcr = 0x00;
-
-		if ((port->HandFlow.ControlHandShake & SERIAL_DTR_MASK) == SERIAL_DTR_HANDSHAKE) status = STATUS_INVALID_PARAMETER;
-		else {
-			new_mcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET);
-			if (IoControlCode == IOCTL_SERIAL_SET_DTR) new_mcr |= 0x02;
-			else new_mcr &= ~0x02;
-			status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET, new_mcr);
-			if (NT_SUCCESS(status)) { port->current_mcr = new_mcr; }
-		}
+		status = asynccom_port_set_rts(port, IoControlCode == IOCTL_SERIAL_SET_RTS ? TRUE : FALSE);
 		break;
 	}
 	case IOCTL_SERIAL_SET_XOFF: {
-		status = asynccom_port_set_xonoff(port, FALSE);
+		// not right, this is supposed to 'emulate' the reception of a xoff
+		//status = asynccom_port_set_xonoff(port, FALSE);
 		break;
 	}
 	case IOCTL_SERIAL_SET_XON: {
-		status = asynccom_port_set_xonoff(port, TRUE);
+		// not right, this is supposed to 'emulate' the reception of a xon
+		//status = asynccom_port_set_xonoff(port, TRUE);
 		break;
 	}
 	case IOCTL_SERIAL_SET_BREAK_ON: {
@@ -399,7 +402,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Could not get request output memory buffer %X\n", status);
 		}
 		*(PULONG)buffer = port->current_mask_value;
-		bytes_returned = sizeof(ULONG);
+		req_context->information = sizeof(ULONG);
 		break;
 	}
 	case IOCTL_SERIAL_SET_WAIT_MASK: {
@@ -477,7 +480,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*((PSERIAL_HANDFLOW)buffer) = port->HandFlow;
-		bytes_returned = sizeof(SERIAL_HANDFLOW);
+		req_context->information = sizeof(SERIAL_HANDFLOW);
 		break; 
 	}
 	case IOCTL_SERIAL_SET_HANDFLOW: {
@@ -490,7 +493,11 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		}
 		handflow = (PSERIAL_HANDFLOW)buffer;
 		status = asynccom_port_set_flowcontrol(port, handflow);
-
+		if (!NT_SUCCESS(status)) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_SET_HANDFLOW: Couldn't set flowcontrol! %!STATUS!", status);
+			break;
+		}
+		port->HandFlow = *handflow;
 		break;
 	}
     case IOCTL_SERIAL_GET_MODEMSTATUS: {
@@ -500,7 +507,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
             break;
         }
         *(PULONG)buffer = asynccom_port_modem_status(port);
-        bytes_returned = sizeof(ULONG);
+		req_context->information = sizeof(ULONG);
         break;
     } 
 	case IOCTL_SERIAL_GET_DTRRTS: {
@@ -513,7 +520,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		modem_control = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET);
 		modem_control &= (SERIAL_DTR_STATE | SERIAL_RTS_STATE);
 		*(PULONG)buffer = modem_control;
-		bytes_returned = sizeof(ULONG);
+		req_context->information = sizeof(ULONG);
 		break;
 	}
 	case IOCTL_SERIAL_GET_COMMSTATUS: { 
@@ -523,7 +530,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
             break;
         }
         status = asynccom_port_get_status(port, buffer);
-        bytes_returned = sizeof(SERIAL_STATUS);
+		req_context->information = sizeof(SERIAL_STATUS);
         break; 
     } 
 	case IOCTL_SERIAL_GET_PROPERTIES: { 
@@ -533,11 +540,30 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		status = asynccom_port_get_properties(port, buffer);
-		bytes_returned = sizeof(SERIAL_COMMPROP);
+		req_context->information = sizeof(SERIAL_COMMPROP);
 		break; 
 	}
 	case IOCTL_SERIAL_XOFF_COUNTER: { status = STATUS_NOT_SUPPORTED; break; }
-	case IOCTL_SERIAL_LSRMST_INSERT: { status = STATUS_NOT_SUPPORTED; break; }
+	case IOCTL_SERIAL_LSRMST_INSERT: {
+		PUCHAR EscapeChar;
+
+		status = WdfRequestRetrieveInputBuffer(Request, sizeof(UCHAR), &buffer, &buffer_size);
+		if (!NT_SUCCESS(status)) {
+			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_SET_HANDFLOW :WdfRequestRetrieveInputBuffer failed %!STATUS!", status);
+			break;
+		}
+
+		EscapeChar = (PUCHAR)buffer;
+		if (*EscapeChar) {
+			if ((*EscapeChar == port->special_chars.XoffChar) || (*EscapeChar == port->special_chars.XonChar)) {
+				status = STATUS_INVALID_PARAMETER;
+				break;
+			}
+		}
+
+		port->escape_char = *EscapeChar;
+		break;
+	}
 	case IOCTL_SERIAL_CONFIG_SIZE: { 
 		status = WdfRequestRetrieveOutputBuffer(Request, sizeof(ULONG), &buffer, &buffer_size);
 		if (!NT_SUCCESS(status)) {
@@ -545,7 +571,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		} 
 		
-		bytes_returned = sizeof(ULONG);
+		req_context->information = sizeof(ULONG);
 		*(PULONG)buffer = 0;
 		status = STATUS_SUCCESS;
 		break; 
@@ -556,7 +582,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "IOCTL_SERIAL_GET_STATS: WdfRequestRetrieveOutputBuffer failed %!STATUS!", status);
 			break;
 		}
-		bytes_returned = sizeof(SERIALPERF_STATS);
+		req_context->information = sizeof(SERIALPERF_STATS);
 		RtlZeroMemory(buffer, sizeof(SERIALPERF_STATS));
 		break; 
 	}
@@ -605,7 +631,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 
 		*sample_rate = port->current_sample_rate;
 
-		bytes_returned = sizeof(*sample_rate);
+		req_context->information = sizeof(*sample_rate);
 		break;
 	}
 	case IOCTL_ASYNCCOM_REPROGRAM: {
@@ -662,7 +688,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*tx_trigger = asynccom_port_get_tx_trigger(port);
-		bytes_returned = sizeof(unsigned);
+		req_context->information = sizeof(unsigned);
 		break;
 	}
 	case IOCTL_ASYNCCOM_SET_RX_TRIGGER: {
@@ -685,7 +711,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*rx_trigger = asynccom_port_get_rx_trigger(port);
-		bytes_returned = sizeof(UINT32);
+		req_context->information = sizeof(UINT32);
 		break;
 	}
 	case IOCTL_ASYNCCOM_SET_EXTERNAL_TRANSMIT: {
@@ -708,7 +734,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*external_transmit = asynccom_port_get_external_transmit(port);
-		bytes_returned = sizeof(UINT32);
+		req_context->information = sizeof(UINT32);
 		break;
 	}
 	case IOCTL_ASYNCCOM_SET_FRAME_LENGTH: {
@@ -731,7 +757,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*frame_length = asynccom_port_get_frame_length(port);
-		bytes_returned = sizeof(UINT32);
+		req_context->information = sizeof(UINT32);
 		break;
 	}
 	case IOCTL_ASYNCCOM_ENABLE_ECHO_CANCEL: {
@@ -751,7 +777,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*echo_cancel = asynccom_port_get_echo_cancel(port);
-		bytes_returned = sizeof(BOOLEAN);
+		req_context->information = sizeof(BOOLEAN);
 		break;
 	}
 	case IOCTL_ASYNCCOM_ENABLE_RS485: {
@@ -771,7 +797,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*rs485 = asynccom_port_get_rs485(port);
-		bytes_returned = sizeof(BOOLEAN);
+		req_context->information = sizeof(BOOLEAN);
 		break;
 	}
 	case IOCTL_ASYNCCOM_ENABLE_9BIT: {
@@ -791,7 +817,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			break;
 		}
 		*nine_bit = asynccom_port_get_9bit(port);
-		bytes_returned = sizeof(BOOLEAN);
+		req_context->information = sizeof(BOOLEAN);
 		break;
 	}
 	case IOCTL_ASYNCCOM_ENABLE_ISOCHRONOUS: {
@@ -820,7 +846,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 
 		*isochronous = asynccom_port_get_isochronous(port);
 
-		bytes_returned = sizeof(int);
+		req_context->information = sizeof(int);
 		break;
 	}
 
@@ -831,8 +857,8 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
     }
 
     if (request_pending == FALSE) {
-		TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Completing request with: %!STATUS!", status);
-		WdfRequestCompleteWithInformation(Request, status, bytes_returned);
+		TraceEvents(TRACE_LEVEL_WARNING, DBG_IOCTL, "Completing request with: %!STATUS!", status); 
+		WdfRequestCompleteWithInformation(Request, status, req_context->information);
     }
 
     TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "%s: Exiting.", __FUNCTION__);
@@ -1275,7 +1301,7 @@ BOOLEAN asynccom_port_get_9bit(_In_ struct asynccom_port *port)
 	return (asynccom_port_get_spr_register(port, NMR_OFFSET)) ? TRUE : FALSE;
 }
 
-NTSTATUS asynccom_port_set_xonoff(_In_ struct asynccom_port *port, BOOLEAN onoff)
+NTSTATUS asynccom_port_set_xonoff_transmit(_In_ struct asynccom_port *port, BOOLEAN xonoff)
 {
 	NTSTATUS status = STATUS_SUCCESS, second_status = STATUS_SUCCESS;
 	UINT32 new_efr = 0x00, old_lcr = 0x00;
@@ -1284,8 +1310,58 @@ NTSTATUS asynccom_port_set_xonoff(_In_ struct asynccom_port *port, BOOLEAN onoff
 	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, 0xBF);
 	if (!NT_SUCCESS(status)) return status;
 	new_efr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET);
-	if (onoff) new_efr |= 0x0a;
-	else new_efr &= ~0x0a;
+	if (xonoff) new_efr |= 0x08;
+	else new_efr &= ~0x08;
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET, new_efr);
+	second_status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, old_lcr);
+	if (!NT_SUCCESS(second_status)) return second_status;
+
+	return status;
+}
+
+NTSTATUS asynccom_port_set_xoff_char(_In_ struct asynccom_port *port, unsigned char xoff)
+{
+	NTSTATUS status = STATUS_SUCCESS, second_status = STATUS_SUCCESS;
+	UINT32 old_lcr = 0x00, new_xoff = 0x00;
+
+	new_xoff |= xoff;
+	old_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, 0xBF);
+	if (!NT_SUCCESS(status)) return status;
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, XOFF1_OFFSET, new_xoff);
+	second_status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, old_lcr);
+	if (!NT_SUCCESS(second_status)) return second_status;
+
+	return status;
+}
+
+NTSTATUS asynccom_port_set_xon_char(_In_ struct asynccom_port *port, unsigned char xon)
+{
+	NTSTATUS status = STATUS_SUCCESS, second_status = STATUS_SUCCESS;
+	UINT32 old_lcr = 0x00, new_xon = 0x00;
+
+	new_xon |= xon;
+	old_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, 0xBF);
+	if (!NT_SUCCESS(status)) return status;
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, XOFF1_OFFSET, new_xon);
+	second_status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, old_lcr);
+	if (!NT_SUCCESS(second_status)) return second_status;
+
+	return status;
+}
+
+NTSTATUS asynccom_port_set_xonoff_receive(_In_ struct asynccom_port *port, BOOLEAN xonoff)
+{
+	NTSTATUS status = STATUS_SUCCESS, second_status = STATUS_SUCCESS;
+	UINT32 new_efr = 0x00, old_lcr = 0x00;
+
+	old_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, 0xBF);
+	if (!NT_SUCCESS(status)) return status;
+	new_efr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET);
+	if (xonoff) new_efr |= 0x02;
+	else new_efr &= ~0x02;
 	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET, new_efr);
 	second_status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, old_lcr);
 	if (!NT_SUCCESS(second_status)) return second_status;
@@ -1391,12 +1467,14 @@ NTSTATUS asynccom_port_set_autorts(_In_ struct asynccom_port *port, BOOLEAN onof
 	NTSTATUS status = STATUS_SUCCESS, second_status = STATUS_SUCCESS;
 	UINT32 new_efr = 0x00, old_lcr = 0x00;
 
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "%s: set_autorts %x", __FUNCTION__, onoff);
 	old_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
 	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, 0xBF);
 	if (!NT_SUCCESS(status)) return status;
 	new_efr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET);
 	if (onoff) new_efr |= 0x40;
 	else new_efr &= ~0x40;
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "%s: new_efr: %x", __FUNCTION__, new_efr);
 	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET, new_efr);
 	second_status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, old_lcr);
 	if (!NT_SUCCESS(second_status)) return second_status;
@@ -1408,12 +1486,14 @@ NTSTATUS asynccom_port_set_autocts(_In_ struct asynccom_port *port, BOOLEAN onof
 	NTSTATUS status = STATUS_SUCCESS, second_status = STATUS_SUCCESS;
 	UINT32 new_efr = 0x00, old_lcr = 0;
 
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "%s: set_autocts %x", __FUNCTION__, onoff);
 	old_lcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET);
 	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, 0xBF);
 	if (!NT_SUCCESS(status)) return status;
 	new_efr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET);
 	if (onoff) new_efr |= 0x80;
 	else new_efr &= ~0x80;
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "%s: new_efr: %x", __FUNCTION__, new_efr);
 	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, EFR_OFFSET, new_efr);
 	second_status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, LCR_OFFSET, old_lcr);
 	if (!NT_SUCCESS(second_status)) return second_status;
@@ -1444,6 +1524,32 @@ NTSTATUS asynccom_port_set_autodsr(_In_ struct asynccom_port *port, BOOLEAN onof
 	return status;
 }
 
+NTSTATUS asynccom_port_set_rts(_In_ struct asynccom_port *port, BOOLEAN rts)
+{
+	UINT32 new_mcr = 0x00;
+	NTSTATUS status;
+
+	new_mcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET);
+	if (rts) new_mcr |= 0x02;
+	else new_mcr &= ~0x02;
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET, new_mcr);
+	if (NT_SUCCESS(status)) port->current_mcr = new_mcr;
+	return status;
+}
+
+NTSTATUS asynccom_port_set_dtr(_In_ struct asynccom_port *port, BOOLEAN dtr)
+{
+	UINT32 new_mcr = 0x00;
+	NTSTATUS status;
+
+	new_mcr = asynccom_port_get_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET);
+	if (dtr) new_mcr |= 0x01;
+	else new_mcr &= ~0x01;
+	status = asynccom_port_set_register_uint32(port, FPGA_UPPER_ADDRESS + ASYNCCOM_UPPER_OFFSET, MCR_OFFSET, new_mcr);
+	if (NT_SUCCESS(status)) port->current_mcr = new_mcr;
+	return status;
+}
+
 NTSTATUS asynccom_port_set_flowcontrol(_In_ struct asynccom_port *port, PSERIAL_HANDFLOW handflow)
 {
 	NTSTATUS status = STATUS_SUCCESS;
@@ -1453,6 +1559,7 @@ NTSTATUS asynccom_port_set_flowcontrol(_In_ struct asynccom_port *port, PSERIAL_
 	if (port->escape_char) {
 		if (handflow->FlowReplace & SERIAL_ERROR_CHAR) return STATUS_INVALID_PARAMETER;
 	}
+
 	if (handflow->ControlHandShake & SERIAL_DTR_HANDSHAKE) status = asynccom_port_set_autodtr(port, TRUE);
 	else status = asynccom_port_set_autodtr(port, FALSE);
 	if (!NT_SUCCESS(status)) return status;
@@ -1462,8 +1569,35 @@ NTSTATUS asynccom_port_set_flowcontrol(_In_ struct asynccom_port *port, PSERIAL_
 	if (handflow->ControlHandShake & SERIAL_DSR_HANDSHAKE) status = asynccom_port_set_autodsr(port, TRUE);
 	else status = asynccom_port_set_autodsr(port, FALSE);
 	if (!NT_SUCCESS(status)) return status;
+	// SERIAL_DCD_HANDSHAKE, not supported
+	// SERIAL_DSR_SENSITIVITY, not supported
+	// SERIAL_ERROR_ABORT, maybe support?
+	if (handflow->ControlHandShake & SERIAL_DTR_CONTROL) status = asynccom_port_set_dtr(port, TRUE);
+	else status = asynccom_port_set_dtr(port, FALSE);
+	if (!NT_SUCCESS(status)) return status;
+
+
+	// SERIAL_AUTO_TRANSMIT
+	/*
+	if (handflow->FlowReplace & SERIAL_AUTO_TRANSMIT) status = asynccom_port_set_xonoff_transmit(port, TRUE);
+	else status = asynccom_port_set_xonoff_transmit(port, FALSE);
+	if (!NT_SUCCESS(status)) return status;
+	*/
+	// SERIAL_AUTO_RECEIVE
+	/*
+	if (handflow->FlowReplace & SERIAL_AUTO_RECEIVE) status = asynccom_port_set_xonoff_receive(port, TRUE);
+	else status = asynccom_port_set_xonoff_receive(port, FALSE);
+	if (!NT_SUCCESS(status)) return status;
+	*/
+	// SERIAL_ERROR_CHAR, maybe support?
+	// SERIAL_NULL_STRIPPING, NYI
+	// SERIAL_BREAK_CHAR, NYI
 	if (handflow->FlowReplace & SERIAL_RTS_HANDSHAKE) status = asynccom_port_set_autorts(port, TRUE);
 	else status = asynccom_port_set_autorts(port, FALSE);
+	if (!NT_SUCCESS(status)) return status;
+	if (handflow->FlowReplace & SERIAL_RTS_CONTROL) status = asynccom_port_set_rts(port, TRUE);
+	else status = asynccom_port_set_rts(port, FALSE);
+	if (!NT_SUCCESS(status)) return status;
 
 
 	return status;
@@ -1487,6 +1621,7 @@ NTSTATUS asynccom_port_get_properties(_In_ struct asynccom_port *port, PSERIAL_C
 	//Properties->SettableBaud = port->supported_bauds;
 
 	Properties->ProvSubType = SERIAL_SP_RS232;
+	//Properties->ProvSubType = SERIAL_SP_RS422;
 	Properties->ProvCapabilities = SERIAL_PCF_DTRDSR |
 		SERIAL_PCF_RTSCTS |
 		SERIAL_PCF_CD |
@@ -1711,4 +1846,26 @@ void asynccom_port_set_memory_cap(struct asynccom_port *port, struct asynccom_me
 		}
 		port->memory_cap.input = value->input;
 	}
+}
+
+NTSTATUS calculate_divisor(unsigned long clock_rate, unsigned long sample_rate, long desired_baud, short *divisor)
+{
+	short correct_divisor = 0;
+	double max_remainder = clock_rate * .01, remainder = 0;
+
+	if (clock_rate < 1) return STATUS_UNSUCCESSFUL;
+	if (sample_rate < 1) return STATUS_UNSUCCESSFUL;
+	if (desired_baud < 1) return STATUS_UNSUCCESSFUL;
+
+	remainder = (clock_rate / sample_rate) % desired_baud;
+	if ((max_remainder < remainder) && (remainder + max_remainder < clock_rate)) return STATUS_UNSUCCESSFUL;
+	correct_divisor = (short)((clock_rate / sample_rate) / desired_baud);
+	if (remainder * 2 > clock_rate) correct_divisor++;
+	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_IOCTL, "clk: %d, smp: %d, desired: %d, div: %d", clock_rate, sample_rate, desired_baud, correct_divisor);
+
+	// Special casing? Stolen from serialfc_windows.
+	if (clock_rate == 1843200) if (desired_baud == 56000) correct_divisor = 2;
+	*divisor = correct_divisor;
+
+	return STATUS_SUCCESS;
 }

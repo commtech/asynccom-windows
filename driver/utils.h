@@ -49,6 +49,6 @@ struct IcpRsStruct {
 
 PCHAR get_ioctl_name(ULONG ioctl_code);
 UINT32 chars_to_u32(const unsigned char *data);
-NTSTATUS calculate_divisor(unsigned long clock_rate, unsigned long sample_rate, long desired_baud, short *divisor);
+BOOLEAN IsQueueEmpty(IN WDFQUEUE Queue);
 int GetICS30703Data(unsigned long desired, unsigned long ppm, struct ResultStruct *theOne, struct IcpRsStruct *theOther, unsigned char *progdata);
 #endif

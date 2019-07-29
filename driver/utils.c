@@ -99,25 +99,13 @@ UINT32 chars_to_u32(const unsigned char *data)
 	return *((UINT32*)data);
 }
 
-NTSTATUS calculate_divisor(unsigned long clock_rate, unsigned long sample_rate, long desired_baud, short *divisor)
+BOOLEAN IsQueueEmpty(IN WDFQUEUE Queue)
 {
-	short correct_divisor = 0;
-	double max_remainder = clock_rate * .01, remainder = 0;
+	WDF_IO_QUEUE_STATE queueStatus;
 
-	if (clock_rate < 1) return STATUS_UNSUCCESSFUL;
-	if (sample_rate < 1) return STATUS_UNSUCCESSFUL;
-	if (desired_baud < 1) return STATUS_UNSUCCESSFUL;
+	queueStatus = WdfIoQueueGetState(Queue, NULL, NULL);
 
-	remainder = (clock_rate / sample_rate) % desired_baud;
-	if ((max_remainder < remainder) && (remainder + max_remainder < clock_rate)) return STATUS_UNSUCCESSFUL;
-	correct_divisor = (short)((clock_rate / sample_rate) / desired_baud);
-	if (remainder * 2 > clock_rate) correct_divisor++;
-
-	// Special casing? Stolen from serialfc_windows.
-	if (clock_rate == 1843200) if (desired_baud == 56000) correct_divisor = 2;
-	*divisor = correct_divisor;
-
-	return STATUS_SUCCESS;
+	return (WDF_IO_QUEUE_IDLE(queueStatus)) ? TRUE : FALSE;
 }
 
 int GetICS30703Data(unsigned long desired, unsigned long ppm, struct ResultStruct *theOne, struct IcpRsStruct *theOther, unsigned char *progdata)
