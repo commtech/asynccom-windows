@@ -38,11 +38,15 @@ void			serial_read_timeout(IN WDFTIMER Timer);
 void			complete_current_read_request(struct asynccom_port *port);
 void			complete_current_write_request(struct asynccom_port *port);
 NTSTATUS		asynccom_port_purge(_In_ struct asynccom_port *port, ULONG mask);
+VOID			complete_current_request(_In_ struct asynccom_port *port, _In_ NTSTATUS status_to_use, WDFREQUEST *current_request);
 
 EVT_WDF_IO_QUEUE_IO_STOP AsyncComEvtIoStop;
 EVT_WDF_USB_READER_COMPLETION_ROUTINE asynccom_port_received_data;
 EVT_WDF_USB_READERS_FAILED FX3EvtReadFailed;
 EVT_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE AsyncComEvtIoCancelOnQueue;
+EVT_WDF_REQUEST_CANCEL cancel_wait;
+EVT_WDF_REQUEST_CANCEL cancel_read;
+EVT_WDF_REQUEST_CANCEL cancel_write;
 
 void basic_completion(_In_ WDFREQUEST Request, _In_ WDFIOTARGET Target, _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams, _In_ WDFCONTEXT Context);
 void complete_current_wait_request(struct asynccom_port *port, NTSTATUS status, ULONG info, ULONG matches);
@@ -50,5 +54,7 @@ void event_occurred(struct asynccom_port *port, ULONG event);
 void process_timeouts(struct asynccom_port *port);
 void process_read(struct asynccom_port *port);
 int get_next_request(struct asynccom_port *port, WDFQUEUE Queue, WDFREQUEST *Request);
+VOID set_cancel_routine(IN WDFREQUEST Request, IN PFN_WDF_REQUEST_CANCEL CancelRoutine);
+NTSTATUS clear_cancel_routine(IN WDFREQUEST Request);
 
 #endif

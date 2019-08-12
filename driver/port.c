@@ -431,11 +431,16 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			status = STATUS_INVALID_PARAMETER;
 			break;
 		}
-
-		if(port->current_wait_request != 0) complete_current_wait_request(port, STATUS_SUCCESS, sizeof(ULONG), 0);
+		req_context->information = sizeof(ULONG);
+		req_context->data_buffer = 0;
+		if (port->current_wait_request) 
+		{
+			clear_cancel_routine(port->current_wait_request);
+			complete_current_request(port, STATUS_SUCCESS, &port->current_wait_request);
+		}
 		port->current_mask_value = new_mask;
 		port->current_mask_history = 0;
-
+		DbgPrint("New wait mask: %x\n", new_mask);
 		break;
 	}
 	case IOCTL_SERIAL_WAIT_ON_MASK: {
@@ -446,18 +451,26 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		}
 		req_context->data_buffer = buffer;
 		req_context->port = port;
+		req_context->information = sizeof(ULONG);
 		if(port->current_mask_value == 0 || port->current_wait_request != 0)
 		{
+			DbgPrint("Wait is already pending, or there's no mask!\n");
 			req_context->status = status = STATUS_INVALID_PARAMETER;
 			break;
 		}
+		DbgPrint("New wait request at: %p.\n", Request);
+		set_cancel_routine(Request, cancel_wait);
 		port->current_wait_request = Request;
+		request_pending = TRUE;
 		if (port->current_mask_history)
 		{
-			complete_current_wait_request(port, STATUS_SUCCESS, sizeof(ULONG), port->current_mask_history);
+			DbgPrint("Already have some mask history, succeeding immediately.\n");
+			*(ULONG *)req_context->data_buffer |= port->current_mask_history;
+			port->current_mask_history = 0;
+			clear_cancel_routine(port->current_wait_request);
+			complete_current_request(port, STATUS_SUCCESS, &port->current_wait_request);
 			break;
 		}
-		request_pending = TRUE;
 		break;
 	}
 	case IOCTL_SERIAL_IMMEDIATE_CHAR: { status = STATUS_NOT_SUPPORTED; break; } // We may be able to implement this - but currently we send every request directly to the Asynccom. This has no current valuable implementation.

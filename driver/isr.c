@@ -60,7 +60,7 @@ VOID AsyncComEvtIoRead(IN WDFQUEUE Queue, IN WDFREQUEST Request, IN size_t Lengt
 		WdfRequestComplete(Request, status);
 		return;
 	}
-
+	DbgPrint("New read request at: %p.\n", Request);
 	status = WdfRequestForwardToIoQueue(Request, port->read_queue2);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_READ, "%s: WdfRequestForwardToIoQueue failed: %X", __FUNCTION__, status);
@@ -84,6 +84,7 @@ VOID AsyncComEvtIoWrite(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ size_
 		WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, Length);
 		return;
 	}
+	DbgPrint("New write request at: %p.\n", Request);
 	status = WdfRequestForwardToIoQueue(Request, port->write_queue2);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: WdfRequestForwardToIoQueue failed: %X", __FUNCTION__, status);
@@ -100,13 +101,26 @@ VOID AsyncComEvtIoStop(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ ULONG 
 	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_PNP, "%s: Entering.", __FUNCTION__);
 	UNREFERENCED_PARAMETER(Queue);
 	UNREFERENCED_PARAMETER(ActionFlags);
+	PREQUEST_CONTEXT context;
 
+	DbgPrint("%s: Stopping..\n", __FUNCTION__);
+	if (!Request) return;
 	if (ActionFlags &  WdfRequestStopActionSuspend) {
 		WdfRequestStopAcknowledge(Request, FALSE); // Don't requeue
 	}
 	else if (ActionFlags &  WdfRequestStopActionPurge) {
 		WdfRequestCancelSentRequest(Request);
 	}
+	else
+	{
+		context = GetRequestContext(Request);
+		context->status = STATUS_CANCELLED;
+		context->information = 0;
+		WdfRequestUnmarkCancelable(Request);
+		DbgPrint("%s: Canceling a request..\n", __FUNCTION__);
+		WdfRequestCompleteWithInformation(Request, context->status, context->information);
+	}
+	
 	return;
 }
 
@@ -166,6 +180,7 @@ void complete_current_wait_request(struct asynccom_port *port, NTSTATUS status, 
 
 	if (old_request)
 	{
+		DbgPrint("Completing the pending wait request %p.\n", old_request);
 		context = GetRequestContext(old_request);
 		context->information = info;
 		context->status = status;
@@ -269,14 +284,15 @@ int get_next_write_request(struct asynccom_port *port)
 	WdfRequestGetParameters(port->current_write_request, &params);
 	context->length = (unsigned)params.Parameters.Write.Length;
 	context->information = 0;
-	context->status = STATUS_UNSUCCESSFUL;
 	status = WdfRequestRetrieveInputBuffer(port->current_write_request, context->length, (PVOID*)&context->data_buffer, NULL);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_WRITE, "%s: WdfRequestRetrieveInputBuffer failed %!STATUS!", __FUNCTION__, status);
+		DbgPrint("Hey, I failed to RetrieveInputBuffer in get_next_write.\n");
 		context->status = status;
-		complete_current_write_request(port);
+		complete_current_request(port, status, &port->current_write_request);
 		return 0;
 	}
+	set_cancel_routine(port->current_write_request, cancel_write);
 
 	return 1;
 }
@@ -309,7 +325,10 @@ void AsynccomProcessWrite(WDFDPC Dpc)
 	context = GetRequestContext(port->current_write_request);
 	if (!context) return;
 	context->status = asynccom_port_data_write(port, (unsigned char *)context->data_buffer, context->length);
-	complete_current_write_request(port);
+	if (NT_SUCCESS(context->status)) context->information = context->length;
+	DbgPrint("AsyncComProcessWrite..\n");
+	clear_cancel_routine(port->current_write_request);
+	complete_current_request(port, context->status, &port->current_write_request);
 	WdfDpcEnqueue(port->process_write_dpc);
 	return;
 }
@@ -482,8 +501,9 @@ void serial_read_timeout(IN WDFTIMER Timer)
 	WdfTimerStop(port->read_request_interval_timer, FALSE);
 	if (port->current_read_request) {
 		context = GetRequestContext(port->current_read_request);
-		context->status = STATUS_TIMEOUT;
-		complete_current_read_request(port);
+		context->information = asynccom_frame_remove_data(port->istream, (unsigned char *)context->data_buffer, context->length);
+		clear_cancel_routine(port->current_read_request);
+		complete_current_request(port, STATUS_TIMEOUT, &port->current_read_request);
 	}
 }
 
@@ -491,20 +511,12 @@ NTSTATUS asynccom_port_purge(_In_ struct asynccom_port *port, ULONG mask) {
 
 
 	if (mask & SERIAL_PURGE_TXABORT) {
-		//WdfIoQueuePurgeSynchronously(port->write_queue);
-		//WdfIoQueuePurgeSynchronously(port->write_queue2);
-		WdfIoQueuePurge(port->write_queue, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
 		WdfIoQueuePurge(port->write_queue2, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
-		WdfIoQueueStart(port->write_queue);
 		WdfIoQueueStart(port->write_queue2);
 	}
 
 	if (mask & SERIAL_PURGE_RXABORT) {
-		//WdfIoQueuePurgeSynchronously(port->read_queue);
-		//WdfIoQueuePurgeSynchronously(port->read_queue2);
-		WdfIoQueuePurge(port->read_queue, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
 		WdfIoQueuePurge(port->read_queue2, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
-		WdfIoQueueStart(port->read_queue);
 		WdfIoQueueStart(port->read_queue2);
 	}
 
@@ -552,7 +564,15 @@ void event_occurred(struct asynccom_port *port, ULONG event)
 	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: event: %d", __FUNCTION__, event);
 	if (!port->current_mask_value) return;
 	if (port->current_mask_value & event) port->current_mask_history |= event;
-	if (port->current_wait_request && port->current_mask_history) complete_current_wait_request(port, STATUS_SUCCESS, sizeof(ULONG), port->current_mask_history);
+	if (port->current_wait_request && port->current_mask_history)
+	{
+		PREQUEST_CONTEXT req_context;
+		req_context = GetRequestContext(port->current_wait_request);
+		*(ULONG *)req_context->data_buffer |= port->current_mask_history;
+		port->current_mask_history = 0;
+		clear_cancel_routine(port->current_wait_request);
+		complete_current_request(port, STATUS_SUCCESS, &port->current_wait_request);
+	}
 }
 
 void process_timeouts(struct asynccom_port *port)
@@ -607,8 +627,9 @@ int get_next_request(struct asynccom_port *port, WDFQUEUE Queue, WDFREQUEST *Req
 
 	// Return immediately, even with nothing.
 	if (port->timeouts.ReadIntervalTimeout == MAXULONG && port->timeouts.ReadTotalTimeoutConstant == 0 && port->timeouts.ReadTotalTimeoutMultiplier == 0) {
-		context->status = STATUS_SUCCESS;
-		complete_current_read_request(port);
+		context->information = asynccom_frame_remove_data(port->istream, (unsigned char *)context->data_buffer, context->length);
+		clear_cancel_routine(port->current_read_request);
+		complete_current_request(port, STATUS_SUCCESS, &port->current_read_request);
 		return 0;
 	}
 
@@ -630,7 +651,93 @@ void process_read(struct asynccom_port *port)
 	if (asynccom_frame_is_empty(port->istream)) return;
 	if ((asynccom_frame_get_length(port->istream) >= context->length))
 	{
-		context->status = STATUS_SUCCESS;
-		complete_current_read_request(port);
+		WdfTimerStop(port->read_request_total_timer, FALSE);
+		WdfTimerStop(port->read_request_interval_timer, FALSE);
+		context->information = asynccom_frame_remove_data(port->istream, (unsigned char *)context->data_buffer, context->length);
+		clear_cancel_routine(port->current_read_request);
+		complete_current_request(port, STATUS_SUCCESS, &port->current_read_request);
 	}
+}
+
+VOID complete_current_request(_In_ struct asynccom_port *port, _In_ NTSTATUS status_to_use, WDFREQUEST *current_request)
+{
+	WDFREQUEST old_request = NULL;
+	PREQUEST_CONTEXT context;
+	UNREFERENCED_PARAMETER(port);
+
+	// Take the request so no one else messes with it.
+	old_request = *current_request;
+	*current_request = NULL;
+
+	// Only play with the request if it actually exists.
+	if (old_request)
+	{
+		DbgPrint("Completing the request at: %p.\n", old_request);
+		context = GetRequestContext(old_request);
+		context->status = status_to_use;
+		WdfRequestCompleteWithInformation(old_request, context->status, context->information);
+	}
+
+}
+
+VOID set_cancel_routine(IN WDFREQUEST Request, IN PFN_WDF_REQUEST_CANCEL CancelRoutine)
+{
+	PREQUEST_CONTEXT context;
+
+	DbgPrint("setting a cancel routine..\n");
+	context = GetRequestContext(Request);
+	WdfRequestMarkCancelable(Request, CancelRoutine);
+	context->cancel_routine = CancelRoutine;
+	context->cancelled = FALSE;
+}
+
+NTSTATUS clear_cancel_routine(IN WDFREQUEST Request)
+{
+	NTSTATUS status = STATUS_UNSUCCESSFUL;
+	PREQUEST_CONTEXT context;
+
+	DbgPrint("clearing a cancel routine..\n");
+	context = GetRequestContext(Request);
+	if (context->cancel_routine)
+	{
+		status = WdfRequestUnmarkCancelable(Request);
+		if (NT_SUCCESS(status)) context->cancel_routine = NULL;
+	}
+	return status;
+}
+
+VOID cancel_wait(IN WDFREQUEST Request)
+{
+	struct asynccom_port *port = 0;
+	PREQUEST_CONTEXT context;
+
+	DbgPrint("cancel wait called..\n");
+	port = GetPortContext(WdfIoQueueGetDevice(WdfRequestGetIoQueue(Request)));
+	context = GetRequestContext(Request);
+	context->cancelled = TRUE;
+	complete_current_request(port, STATUS_CANCELLED, &port->current_wait_request);
+}
+
+VOID cancel_read(IN WDFREQUEST Request)
+{
+	struct asynccom_port *port = 0;
+	PREQUEST_CONTEXT context;
+
+	DbgPrint("cancel read called..\n");
+	port = GetPortContext(WdfIoQueueGetDevice(WdfRequestGetIoQueue(Request)));
+	context = GetRequestContext(Request);
+	context->cancelled = TRUE;
+	complete_current_request(port, STATUS_CANCELLED, &port->current_read_request);
+}
+
+VOID cancel_write(IN WDFREQUEST Request)
+{
+	struct asynccom_port *port = 0;
+	PREQUEST_CONTEXT context;
+
+	DbgPrint("cancel write called..\n");
+	port = GetPortContext(WdfIoQueueGetDevice(WdfRequestGetIoQueue(Request)));
+	context = GetRequestContext(Request);
+	context->cancelled = TRUE;
+	complete_current_request(port, STATUS_CANCELLED, &port->current_write_request);
 }

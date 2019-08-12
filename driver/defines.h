@@ -294,11 +294,9 @@ typedef struct asynccom_port {
 
 	unsigned port_number;
 
-	WDFQUEUE write_queue;
 	WDFQUEUE write_queue2;
-	WDFQUEUE read_queue;
 	WDFQUEUE read_queue2; // TODO: Change name to be more descriptive. 
-	WDFQUEUE ioctl_queue;
+	WDFQUEUE default_queue;
 
 	WDFSPINLOCK istream_spinlock;
 	WDFSPINLOCK ostream_spinlock;
