@@ -288,7 +288,7 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 			status = STATUS_INVALID_PARAMETER;
 			break;
 		}
-		status = WdfRequestForwardToIoQueue(Request, port->read_queue2);
+		status = WdfRequestForwardToIoQueue(Request, port->read_queue);
 		if (!NT_SUCCESS(status)) {
 			TraceEvents(TRACE_LEVEL_ERROR, DBG_IOCTL, "%s: WdfRequestForwardToIoQueue failed: %X", __FUNCTION__, status);
 			return;
@@ -433,14 +433,12 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		}
 		req_context->information = sizeof(ULONG);
 		req_context->data_buffer = 0;
-		if (port->current_wait_request) 
+		if (port->current_wait_request && clear_cancel_routine(port->current_wait_request) != STATUS_CANCELLED)
 		{
-			clear_cancel_routine(port->current_wait_request);
-			complete_current_request(port, STATUS_SUCCESS, &port->current_wait_request);
+				complete_current_request(port, STATUS_SUCCESS, &port->current_wait_request);
 		}
 		port->current_mask_value = new_mask;
 		port->current_mask_history = 0;
-		DbgPrint("New wait mask: %x\n", new_mask);
 		break;
 	}
 	case IOCTL_SERIAL_WAIT_ON_MASK: {
@@ -454,21 +452,18 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		req_context->information = sizeof(ULONG);
 		if(port->current_mask_value == 0 || port->current_wait_request != 0)
 		{
-			DbgPrint("Wait is already pending, or there's no mask!\n");
 			req_context->status = status = STATUS_INVALID_PARAMETER;
 			break;
 		}
-		DbgPrint("New wait request at: %p.\n", Request);
 		set_cancel_routine(Request, cancel_wait);
 		port->current_wait_request = Request;
 		request_pending = TRUE;
 		if (port->current_mask_history)
 		{
-			DbgPrint("Already have some mask history, succeeding immediately.\n");
 			*(ULONG *)req_context->data_buffer |= port->current_mask_history;
 			port->current_mask_history = 0;
-			clear_cancel_routine(port->current_wait_request);
-			complete_current_request(port, STATUS_SUCCESS, &port->current_wait_request);
+			if (clear_cancel_routine(port->current_wait_request) != STATUS_CANCELLED)
+				complete_current_request(port, STATUS_SUCCESS, &port->current_wait_request);
 			break;
 		}
 		break;
@@ -1880,5 +1875,26 @@ NTSTATUS calculate_divisor(unsigned long clock_rate, unsigned long sample_rate, 
 	if (clock_rate == 1843200) if (desired_baud == 56000) correct_divisor = 2;
 	*divisor = correct_divisor;
 
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS asynccom_port_purge(_In_ struct asynccom_port *port, ULONG mask) {
+
+
+	if (mask & SERIAL_PURGE_TXABORT) {
+		WdfIoQueuePurge(port->write_queue, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
+		WdfIoQueueStart(port->write_queue);
+	}
+
+	if (mask & SERIAL_PURGE_RXABORT) {
+		WdfIoQueuePurge(port->read_queue, WDF_NO_EVENT_CALLBACK, WDF_NO_CONTEXT);
+		WdfIoQueueStart(port->read_queue);
+	}
+
+	if (mask & SERIAL_PURGE_RXCLEAR) {
+		WdfSpinLockAcquire(port->istream_spinlock);
+		asynccom_frame_clear(port->istream);
+		WdfSpinLockRelease(port->istream_spinlock);
+	}
 	return STATUS_SUCCESS;
 }

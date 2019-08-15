@@ -98,6 +98,7 @@ void				asynccom_port_set_clock_bits(_In_ struct asynccom_port *port, unsigned c
 NTSTATUS            asynccom_port_get_status(_In_ struct asynccom_port *port, PSERIAL_STATUS settings);
 ULONG               asynccom_port_modem_status(_In_ struct asynccom_port *port);
 void				asynccom_port_set_memory_cap(struct asynccom_port *port, struct asynccom_memory_cap *value);
+NTSTATUS			asynccom_port_purge(_In_ struct asynccom_port *port, ULONG mask);
 
 NTSTATUS			calculate_divisor(unsigned long clock_rate, unsigned long sample_rate, long desired_baud, short *divisor);
 

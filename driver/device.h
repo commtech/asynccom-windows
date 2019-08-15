@@ -27,32 +27,31 @@ THE SOFTWARE.
 #include <defines.h>
 #include "trace.h"
 
-struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT DeviceInit);
+struct asynccom_port			*asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT DeviceInit);
 
-EVT_WDF_DRIVER_DEVICE_ADD AsyncComEvtDeviceAdd;
-EVT_WDF_DEVICE_D0_ENTRY AsyncComEvtDeviceD0Entry;
-EVT_WDF_DEVICE_D0_EXIT AsyncComEvtDeviceD0Exit;
+EVT_WDF_DRIVER_DEVICE_ADD		AsyncComEvtDeviceAdd;
+EVT_WDF_DEVICE_D0_ENTRY			AsyncComEvtDeviceD0Entry;
+EVT_WDF_DEVICE_D0_EXIT			AsyncComEvtDeviceD0Exit;
 EVT_WDF_DEVICE_PREPARE_HARDWARE AsyncComEvtDevicePrepareHardware;
 EVT_WDF_DEVICE_RELEASE_HARDWARE AsyncComEvtDeviceReleaseHardware;
-EVT_WDF_IO_QUEUE_IO_WRITE AsyncComEvtIoWrite;
-EVT_WDF_IO_QUEUE_IO_READ AsyncComEvtIoRead;
-EVT_WDF_DEVICE_CONTEXT_CLEANUP AsyncComEvtDeviceContextCleanup;
-EVT_WDF_DEVICE_FILE_CREATE AsyncComEvtDeviceFileCreate;
-EVT_WDF_FILE_CLOSE AsyncComEvtFileClose;
+EVT_WDF_IO_QUEUE_IO_WRITE		AsyncComEvtIoWrite;
+EVT_WDF_IO_QUEUE_IO_READ		AsyncComEvtIoRead;
+EVT_WDF_DEVICE_CONTEXT_CLEANUP	AsyncComEvtDeviceContextCleanup;
+EVT_WDF_DEVICE_FILE_CREATE		AsyncComEvtDeviceFileCreate;
+EVT_WDF_FILE_CLOSE				AsyncComEvtFileClose;
 
-NTSTATUS setup_spinlocks(_In_ struct asynccom_port *port);
-NTSTATUS setup_dpc(_In_ struct asynccom_port *port);
-NTSTATUS setup_timer(_In_ struct asynccom_port *port);
-NTSTATUS setup_queues(_In_ struct asynccom_port *port);
+NTSTATUS						setup_spinlocks(_In_ struct asynccom_port *port);
+NTSTATUS						setup_dpc(_In_ struct asynccom_port *port);
+NTSTATUS						setup_timer(_In_ struct asynccom_port *port);
+NTSTATUS						setup_queues(_In_ struct asynccom_port *port);
 
 _IRQL_requires_(PASSIVE_LEVEL)
-NTSTATUS SelectInterfaces(_In_ struct asynccom_port *port);
+NTSTATUS						SelectInterfaces(_In_ struct asynccom_port *port);
 _IRQL_requires_(PASSIVE_LEVEL)
-NTSTATUS OsrFxSetPowerPolicy(_In_ struct asynccom_port *port);
-NTSTATUS SerialReadSymName(_In_ struct asynccom_port *port, __out_bcount(*SizeOfRegName) PWSTR RegName, __inout PUSHORT SizeOfRegName);
-BOOLEAN SerialGetRegistryKeyValue(_In_ struct asynccom_port *port, __in PCWSTR Name, OUT PULONG Value);
-NTSTATUS SerialDoExternalNaming(_In_ struct asynccom_port *port);
-BOOLEAN SerialGetFdoRegistryKeyValue(IN PWDFDEVICE_INIT DeviceInit, __in PCWSTR Name, OUT PULONG Value);
-
+NTSTATUS						OsrFxSetPowerPolicy(_In_ struct asynccom_port *port);
+NTSTATUS						SerialReadSymName(_In_ struct asynccom_port *port, __out_bcount(*SizeOfRegName) PWSTR RegName, __inout PUSHORT SizeOfRegName);
+BOOLEAN							SerialGetRegistryKeyValue(_In_ struct asynccom_port *port, __in PCWSTR Name, OUT PULONG Value);
+NTSTATUS						SerialDoExternalNaming(_In_ struct asynccom_port *port);
+BOOLEAN							SerialGetFdoRegistryKeyValue(IN PWDFDEVICE_INIT DeviceInit, __in PCWSTR Name, OUT PULONG Value);
 
 #endif

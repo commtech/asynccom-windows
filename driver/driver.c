@@ -65,12 +65,9 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 VOID OsrFxEvtDriverContextCleanup(WDFOBJECT Driver)
 {
     PAGED_CODE ();
-	DbgPrint("%s: Closing..?\n", __FUNCTION__);
     TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT,  "%s: Entering.\n", __FUNCTION__);
-
 	WPP_CLEANUP(NULL);
     UNREFERENCED_PARAMETER(Driver);
-	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT, "%s: Exiting.\n", __FUNCTION__);
 }
 
 #if !defined(EVENT_TRACING)

@@ -29,16 +29,15 @@ THE SOFTWARE.
 #include <defines.h>
 
 
-struct asynccom_frame *asynccom_frame_new(struct asynccom_port *port);
-void asynccom_frame_delete(struct asynccom_frame *frame);
-
-int asynccom_frame_update_buffer_size(struct asynccom_frame *frame, unsigned size);
-unsigned asynccom_frame_get_length(struct asynccom_frame *frame);
-unsigned asynccom_frame_get_buffer_size(struct asynccom_frame *frame);
-int asynccom_frame_add_data(struct asynccom_frame *frame, const unsigned char *data, unsigned length);
-int asynccom_frame_remove_data(struct asynccom_frame *frame, unsigned char *destination, unsigned length);
-unsigned asynccom_frame_is_empty(struct asynccom_frame *frame);
-void asynccom_frame_clear(struct asynccom_frame *frame);
+struct asynccom_frame	*asynccom_frame_new(struct asynccom_port *port);
+void					asynccom_frame_delete(struct asynccom_frame *frame);
+int						asynccom_frame_update_buffer_size(struct asynccom_frame *frame, unsigned size);
+unsigned				asynccom_frame_get_length(struct asynccom_frame *frame);
+unsigned				asynccom_frame_get_buffer_size(struct asynccom_frame *frame);
+int						asynccom_frame_add_data(struct asynccom_frame *frame, const unsigned char *data, unsigned length);
+int						asynccom_frame_remove_data(struct asynccom_frame *frame, unsigned char *destination, unsigned length);
+unsigned				asynccom_frame_is_empty(struct asynccom_frame *frame);
+void					asynccom_frame_clear(struct asynccom_frame *frame);
 
 
 #endif

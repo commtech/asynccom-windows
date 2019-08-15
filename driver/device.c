@@ -221,7 +221,7 @@ NTSTATUS setup_dpc(_In_ struct asynccom_port *port)
 	WDF_OBJECT_ATTRIBUTES_INIT(&dpcAttributes);
 	dpcAttributes.ParentObject = port->device;
 
-	WDF_DPC_CONFIG_INIT(&dpcConfig, &AsynccomProcessRead);
+	WDF_DPC_CONFIG_INIT(&dpcConfig, &AsyncComProcessRead);
 	dpcConfig.AutomaticSerialization = TRUE;
 
 	status = WdfDpcCreate(&dpcConfig, &dpcAttributes, &port->process_read_dpc);
@@ -231,7 +231,7 @@ NTSTATUS setup_dpc(_In_ struct asynccom_port *port)
 		return status;
 	}
 
-	WDF_DPC_CONFIG_INIT(&dpcConfig, &AsynccomProcessWrite);
+	WDF_DPC_CONFIG_INIT(&dpcConfig, &AsyncComProcessWrite);
 	dpcConfig.AutomaticSerialization = TRUE;
 
 	status = WdfDpcCreate(&dpcConfig, &dpcAttributes, &port->process_write_dpc);
@@ -357,21 +357,21 @@ NTSTATUS setup_queues(_In_ struct asynccom_port *port)
 
 	WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchManual);
 	queue_config.EvtIoStop = AsyncComEvtIoStop;
-	status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->write_queue2);
+	status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->write_queue);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
 		return status;
 	}
-	DbgPrint("Write queue address: %p\n", port->write_queue2);
+	DbgPrint("Write queue address: %p\n", port->write_queue);
 
     WDF_IO_QUEUE_CONFIG_INIT(&queue_config, WdfIoQueueDispatchManual);
 	queue_config.EvtIoStop = AsyncComEvtIoStop;
-    status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->read_queue2);
+    status = WdfIoQueueCreate(port->device, &queue_config, WDF_NO_OBJECT_ATTRIBUTES, &port->read_queue);
     if (!NT_SUCCESS(status)) {
         TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfIoQueueCreate failed %!STATUS!", __FUNCTION__, status);
         return status;
     }
-	DbgPrint("Read queue address: %p\n", port->read_queue2);
+	DbgPrint("Read queue address: %p\n", port->read_queue);
 
     return status;
 }
@@ -491,9 +491,9 @@ NTSTATUS AsyncComEvtDevicePrepareHardware(WDFDEVICE Device, WDFCMRESLIST Resourc
         }
     }
 	
-	WDF_USB_CONTINUOUS_READER_CONFIG_INIT(&readerConfig, asynccom_port_received_data, port, 512);
+	WDF_USB_CONTINUOUS_READER_CONFIG_INIT(&readerConfig, data_received, port, 512);
 	readerConfig.NumPendingReads = 1;
-	readerConfig.EvtUsbTargetPipeReadersFailed = FX3EvtReadFailed;
+	readerConfig.EvtUsbTargetPipeReadersFailed = data_received_failed;
 	status = WdfUsbTargetPipeConfigContinuousReader(port->data_read_pipe, &readerConfig);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfUsbTargetPipeConfigContinuousReader failed  %!STATUS!\n", __FUNCTION__, status);
@@ -893,16 +893,6 @@ BOOLEAN SerialGetFdoRegistryKeyValue(IN PWDFDEVICE_INIT DeviceInit, __in PCWSTR 
 VOID AsyncComEvtDeviceContextCleanup(WDFDEVICE Device)
 {
 	UNREFERENCED_PARAMETER(Device);
-	//struct asynccom_port *port = 0;
-	//port = GetPortContext(Device);
-	DbgPrint("%s: Closing port.\n", __FUNCTION__);
-	/*
-	WdfTimerStop(port->read_request_total_timer, TRUE);
-	WdfTimerStop(port->read_request_interval_timer, TRUE);
-	if (port->current_wait_request) complete_current_wait_request(port, STATUS_CANCELLED, sizeof(ULONG), 0);
-	if (port->current_read_request) complete_current_read_request(port);
-	if (port->current_write_request) complete_current_write_request(port);
-	*/
 }
 
 VOID AsyncComEvtDeviceFileCreate(IN WDFDEVICE Device, IN WDFREQUEST Request, IN WDFFILEOBJECT FileObject)
@@ -911,7 +901,6 @@ VOID AsyncComEvtDeviceFileCreate(IN WDFDEVICE Device, IN WDFREQUEST Request, IN 
 	UNREFERENCED_PARAMETER(FileObject);
 	// mark the file as open
 	// WdfDeviceSetStaticStopRemove???
-	DbgPrint("%s: Opening port.\n", __FUNCTION__);
 	port = GetPortContext(Device);
 	WdfRequestComplete(Request, STATUS_SUCCESS);
 }
@@ -920,7 +909,6 @@ VOID AsyncComEvtFileClose(IN WDFFILEOBJECT FileObject)
 {
 	PAGED_CODE();
 	struct asynccom_port *port = 0;
-	DbgPrint("%s: Closing port.\n", __FUNCTION__);
 	port = GetPortContext(WdfFileObjectGetDevice(FileObject));
 	WdfTimerStop(port->read_request_interval_timer, TRUE);
 	WdfTimerStop(port->read_request_total_timer, TRUE);

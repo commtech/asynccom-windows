@@ -99,7 +99,7 @@ UINT32 chars_to_u32(const unsigned char *data)
 	return *((UINT32*)data);
 }
 
-BOOLEAN IsQueueEmpty(IN WDFQUEUE Queue)
+BOOLEAN is_queue_empty(IN WDFQUEUE Queue)
 {
 	WDF_IO_QUEUE_STATE queueStatus;
 
