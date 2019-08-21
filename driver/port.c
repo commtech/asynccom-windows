@@ -268,11 +268,6 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		break; 
 	}
 	case IOCTL_SERIAL_SET_TIMEOUTS: {
-		// Maybe this should be added to the read queue
-		// and the read function should determine if the request
-		// is an actual read, or a timeout change.
-		// that would keep it from happening while a read is
-		// pending
 		PSERIAL_TIMEOUTS new_timeouts;
 
 		status = WdfRequestRetrieveInputBuffer(Request, sizeof(SERIAL_TIMEOUTS), &buffer, &buffer_size);
@@ -283,7 +278,6 @@ VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _I
 		new_timeouts = (PSERIAL_TIMEOUTS)buffer;
 
 		if ((new_timeouts->ReadIntervalTimeout == MAXULONG) &&
-			(new_timeouts->ReadTotalTimeoutMultiplier == MAXULONG) &&
 			(new_timeouts->ReadTotalTimeoutConstant == MAXULONG)) {
 			status = STATUS_INVALID_PARAMETER;
 			break;

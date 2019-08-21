@@ -155,30 +155,6 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
         TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Failed to set up queues! %!STATUS!", __FUNCTION__, status);
 		return 0;
 	}
-
-    /*
-	status = WdfDeviceCreateDeviceInterface(device, (LPGUID)&GUID_DEVINTERFACE_COMPORT, NULL);
-	if (!NT_SUCCESS(status)) {
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: WdfDeviceCreateDeviceInterface failed  %!STATUS!\n", __FUNCTION__, status);
-		return 0;
-	}
-    
-	RtlInitEmptyUnicodeString(&dos_name, dos_name_buffer, sizeof(dos_name_buffer));
-	status = RtlUnicodeStringPrintf(&dos_name, L"\\DosDevices\\ASYNCCOM%i", port_num);
-	if (!NT_SUCCESS(status)) {
-		WdfObjectDelete(port->device);
-		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: RtlUnicodeStringPrintf failed %!STATUS!", __FUNCTION__, status);
-		return 0;
-	}
-
-	status = WdfDeviceCreateSymbolicLink(port->device, &dos_name);
-	if (!NT_SUCCESS(status)) {
-		WdfObjectDelete(port->device);
-		TraceEvents(TRACE_LEVEL_WARNING, DBG_PNP, "%s: WdfDeviceCreateSymbolicLink failed %!STATUS!", __FUNCTION__, status);
-		return 0;
-	}
-	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_PNP, "%s: device name %wZ!", __FUNCTION__, &dos_name);
-	*/
 	
 	status = setup_spinlocks(port);
 	if (!NT_SUCCESS(status)) {
@@ -198,7 +174,6 @@ struct asynccom_port *asynccom_port_new(WDFDRIVER Driver, IN PWDFDEVICE_INIT Dev
 		return 0;
 	}
 	
-	// To be added for COM compatibility. Currently errors.
 	status = SerialDoExternalNaming(port);
 	if (!NT_SUCCESS(status)) {
 		TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP, "%s: Failed to set up the COM port!  %!STATUS!", __FUNCTION__, status);

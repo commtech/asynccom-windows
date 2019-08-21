@@ -271,9 +271,11 @@ int get_next_request(struct asynccom_port *port, WDFQUEUE Queue, WDFREQUEST *Req
 		WdfTimerStop(port->read_request_total_timer, FALSE);
 		WdfTimerStop(port->read_request_interval_timer, FALSE);
 
+		// Interval = 0, Constant = 0, Multiplier = 0
 		// No timeouts are used - wait for data indefinitely.
 		if (port->timeouts.ReadIntervalTimeout == 0 && port->timeouts.ReadTotalTimeoutConstant == 0 && port->timeouts.ReadTotalTimeoutMultiplier == 0) return 1;
 
+		// Interval = MAX, Constant = 0, Multiplier = 0
 		// Return immediately, even with nothing.
 		if (port->timeouts.ReadIntervalTimeout == MAXULONG && port->timeouts.ReadTotalTimeoutConstant == 0 && port->timeouts.ReadTotalTimeoutMultiplier == 0) {
 			context->information = asynccom_frame_remove_data(port->istream, (unsigned char *)context->data_buffer, context->length);
@@ -281,6 +283,17 @@ int get_next_request(struct asynccom_port *port, WDFQUEUE Queue, WDFREQUEST *Req
 				complete_current_request(port, STATUS_SUCCESS, &port->current_read_request);
 			return 0;
 		}
+
+		// https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ntddser/ns-ntddser-_serial_timeouts
+		// TODO:????
+		// If both ReadTotalTimeoutMultiplier and ReadTotalTimeoutConstant are zero, 
+		// and ReadIntervalTimeout is less than MAXULONG and greater than zero, a read 
+		// operation times out only if the interval between a pair of consecutively 
+		// received bytes exceeds ReadIntervalTimeout. If these three time-out values 
+		// are used, and the serial port's input buffer is empty when a read request is 
+		// sent to the port, this request never times out until after the port receives 
+		// at least one byte of new data.
+
 
 		if ((port->timeouts.ReadTotalTimeoutConstant != 0 && port->timeouts.ReadTotalTimeoutConstant != MAXULONG)
 			|| (port->timeouts.ReadTotalTimeoutMultiplier != 0 && port->timeouts.ReadTotalTimeoutMultiplier != MAXULONG))
