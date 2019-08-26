@@ -865,12 +865,12 @@ BOOLEAN SerialGetFdoRegistryKeyValue(IN PWDFDEVICE_INIT DeviceInit, __in PCWSTR 
 	return retValue;
 }
 
-VOID AsyncComEvtDeviceContextCleanup(WDFDEVICE Device)
+void AsyncComEvtDeviceContextCleanup(WDFDEVICE Device)
 {
 	UNREFERENCED_PARAMETER(Device);
 }
 
-VOID AsyncComEvtDeviceFileCreate(IN WDFDEVICE Device, IN WDFREQUEST Request, IN WDFFILEOBJECT FileObject)
+void AsyncComEvtDeviceFileCreate(IN WDFDEVICE Device, IN WDFREQUEST Request, IN WDFFILEOBJECT FileObject)
 {
 	struct asynccom_port *port = 0;
 	UNREFERENCED_PARAMETER(FileObject);
@@ -880,7 +880,7 @@ VOID AsyncComEvtDeviceFileCreate(IN WDFDEVICE Device, IN WDFREQUEST Request, IN 
 	WdfRequestComplete(Request, STATUS_SUCCESS);
 }
 
-VOID AsyncComEvtFileClose(IN WDFFILEOBJECT FileObject)
+void AsyncComEvtFileClose(IN WDFFILEOBJECT FileObject)
 {
 	PAGED_CODE();
 	struct asynccom_port *port = 0;

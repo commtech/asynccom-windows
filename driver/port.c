@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "port.tmh"
 #endif
 
-VOID AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ size_t OutputBufferLength, _In_ size_t InputBufferLength, _In_ ULONG IoControlCode)
+void AsyncComEvtIoDeviceControl(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ size_t OutputBufferLength, _In_ size_t InputBufferLength, _In_ ULONG IoControlCode)
 {
     WDFDEVICE           device;
     BOOLEAN             request_pending = FALSE;

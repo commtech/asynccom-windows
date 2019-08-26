@@ -321,7 +321,7 @@ void process_read(struct asynccom_port *port)
 	}
 }
 
-VOID complete_current_request(_In_ struct asynccom_port *port, _In_ NTSTATUS status_to_use, WDFREQUEST *current_request)
+void complete_current_request(_In_ struct asynccom_port *port, _In_ NTSTATUS status_to_use, WDFREQUEST *current_request)
 {
 	WDFREQUEST old_request = NULL;
 	PREQUEST_CONTEXT context;
@@ -342,7 +342,7 @@ VOID complete_current_request(_In_ struct asynccom_port *port, _In_ NTSTATUS sta
 
 }
 
-VOID set_cancel_routine(IN WDFREQUEST Request, IN PFN_WDF_REQUEST_CANCEL CancelRoutine)
+void set_cancel_routine(IN WDFREQUEST Request, IN PFN_WDF_REQUEST_CANCEL CancelRoutine)
 {
 	PREQUEST_CONTEXT context;
 
@@ -366,7 +366,7 @@ NTSTATUS clear_cancel_routine(IN WDFREQUEST Request)
 	return status;
 }
 
-VOID cancel_wait(IN WDFREQUEST Request)
+void cancel_wait(IN WDFREQUEST Request)
 {
 	struct asynccom_port *port = 0;
 	PREQUEST_CONTEXT context;
@@ -377,7 +377,7 @@ VOID cancel_wait(IN WDFREQUEST Request)
 	complete_current_request(port, STATUS_CANCELLED, &port->current_wait_request);
 }
 
-VOID cancel_read(IN WDFREQUEST Request)
+void cancel_read(IN WDFREQUEST Request)
 {
 	struct asynccom_port *port = 0;
 	PREQUEST_CONTEXT context;
@@ -388,7 +388,7 @@ VOID cancel_read(IN WDFREQUEST Request)
 	complete_current_request(port, STATUS_CANCELLED, &port->current_read_request);
 }
 
-VOID cancel_write(IN WDFREQUEST Request)
+void cancel_write(IN WDFREQUEST Request)
 {
 	struct asynccom_port *port = 0;
 	PREQUEST_CONTEXT context;
@@ -445,7 +445,7 @@ void AsyncComEvtIoCancelOnQueue(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request)
 	WdfRequestCompleteWithInformation(Request, req_context->status, req_context->information);
 }
 
-VOID AsyncComEvtIoRead(IN WDFQUEUE Queue, IN WDFREQUEST Request, IN size_t Length)
+void AsyncComEvtIoRead(IN WDFQUEUE Queue, IN WDFREQUEST Request, IN size_t Length)
 {
 	struct asynccom_port *port = 0;
 	NTSTATUS status = STATUS_SUCCESS;
@@ -484,7 +484,7 @@ VOID AsyncComEvtIoRead(IN WDFQUEUE Queue, IN WDFREQUEST Request, IN size_t Lengt
 	WdfDpcEnqueue(port->process_read_dpc);
 }
 
-VOID AsyncComEvtIoWrite(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ size_t Length)
+void AsyncComEvtIoWrite(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ size_t Length)
 {
 	NTSTATUS status = STATUS_SUCCESS;
 	struct asynccom_port *port = 0;
@@ -523,7 +523,7 @@ VOID AsyncComEvtIoWrite(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ size_
 	WdfDpcEnqueue(port->process_write_dpc);
 }
 
-VOID AsyncComEvtIoStop(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ ULONG ActionFlags)
+void AsyncComEvtIoStop(_In_ WDFQUEUE Queue, _In_ WDFREQUEST Request, _In_ ULONG ActionFlags)
 {
 	TraceEvents(TRACE_LEVEL_VERBOSE, DBG_PNP, "%s: Entering.", __FUNCTION__);
 	UNREFERENCED_PARAMETER(Queue);
