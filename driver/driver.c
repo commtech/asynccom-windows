@@ -1,22 +1,22 @@
 /*
 Copyright 2019 Commtech, Inc.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy 
-of this software and associated documentation files (the "Software"), to deal 
-in the Software without restriction, including without limitation the rights 
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-copies of the Software, and to permit persons to whom the Software is 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in 
+The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
@@ -38,17 +38,17 @@ ULONG DebugFlag = 0xff;
 
 NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
-	WDF_DRIVER_CONFIG       config;
+    WDF_DRIVER_CONFIG       config;
     NTSTATUS                status = STATUS_SUCCESS;
     WDF_OBJECT_ATTRIBUTES   attributes;
 
-    WPP_INIT_TRACING( DriverObject, RegistryPath );
+    WPP_INIT_TRACING(DriverObject, RegistryPath);
     TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Async Com Driver\n");
     TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Built %s %s\n", __DATE__, __TIME__);
-	TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Copyright (c) 2019, Fastcom.");
-  
-	ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
-	WDF_DRIVER_CONFIG_INIT(&config, AsyncComEvtDeviceAdd);
+    TraceEvents(TRACE_LEVEL_INFORMATION, DBG_INIT, "Copyright (c) 2019, Fastcom.");
+
+    ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+    WDF_DRIVER_CONFIG_INIT(&config, AsyncComEvtDeviceAdd);
 
     WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
     attributes.EvtCleanupCallback = OsrFxEvtDriverContextCleanup;
@@ -58,28 +58,28 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
         TraceEvents(TRACE_LEVEL_ERROR, DBG_INIT, "WdfDriverCreate failed with status 0x%x\n", status);
         WPP_CLEANUP(NULL);
     }
-	
+
     return status;
 }
 
 void OsrFxEvtDriverContextCleanup(WDFOBJECT Driver)
 {
-    PAGED_CODE ();
-    TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT,  "%s: Entering.\n", __FUNCTION__);
-	WPP_CLEANUP(NULL);
+    PAGED_CODE();
+    TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INIT, "%s: Entering.\n", __FUNCTION__);
+    WPP_CLEANUP(NULL);
     UNREFERENCED_PARAMETER(Driver);
 }
 
 #if !defined(EVENT_TRACING)
 
 VOID
-TraceEvents (
+TraceEvents(
     _In_ ULONG DebugPrintLevel,
     _In_ ULONG DebugPrintFlag,
     _Printf_format_string_
     _In_ PCSTR DebugMessage,
     ...
-    )
+)
 
 /*++
 
@@ -99,7 +99,7 @@ Return Value:
     None.
 
  --*/
- {
+{
 #if DBG
 #define     TEMP_BUFFER_SIZE        1024
     va_list    list;
@@ -115,18 +115,18 @@ Return Value:
         // This function takes care of NULL terminating if the message
         // is longer than the buffer.
         //
-        status = RtlStringCbVPrintfA( debugMessageBuffer,
-                                      sizeof(debugMessageBuffer),
-                                      DebugMessage,
-                                      list );
-        if(!NT_SUCCESS(status)) {
+        status = RtlStringCbVPrintfA(debugMessageBuffer,
+            sizeof(debugMessageBuffer),
+            DebugMessage,
+            list);
+        if (!NT_SUCCESS(status)) {
 
-            DbgPrint (_DRIVER_NAME_": RtlStringCbVPrintfA failed 0x%x\n", status);
+            DbgPrint(_DRIVER_NAME_": RtlStringCbVPrintfA failed 0x%x\n", status);
             return;
         }
         if (DebugPrintLevel <= TRACE_LEVEL_ERROR ||
             (DebugPrintLevel <= DebugLevel &&
-             ((DebugPrintFlag & DebugFlag) == DebugPrintFlag))) {
+            ((DebugPrintFlag & DebugFlag) == DebugPrintFlag))) {
             DbgPrint("%s %s", _DRIVER_NAME_, debugMessageBuffer);
         }
     }

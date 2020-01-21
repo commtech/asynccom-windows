@@ -1,22 +1,22 @@
 /*
 Copyright 2019 Commtech, Inc.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy 
-of this software and associated documentation files (the "Software"), to deal 
-in the Software without restriction, including without limitation the rights 
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-copies of the Software, and to permit persons to whom the Software is 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in 
+The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
@@ -262,90 +262,90 @@ typedef struct _SERIAL_FIRMWARE_DATA {
 #define CE_BIT	0x00040000
 
 typedef struct asynccom_frame {
-	unsigned char *buffer;
-	unsigned buffer_size;
-	unsigned data_length;
-	unsigned lost_bytes;
-	struct asynccom_port *port;
+    unsigned char *buffer;
+    unsigned buffer_size;
+    unsigned data_length;
+    unsigned lost_bytes;
+    struct asynccom_port *port;
 } ASYNCCOM_FRAME;
 
 typedef struct asynccom_port {
-	WDFUSBDEVICE usb_device;
-	ULONG usb_traits;
-	PDRIVER_OBJECT driver_object;
-	PDEVICE_OBJECT device_object;
-	WDFDEVICE device;
-	WDFUSBINTERFACE usb_interface;
-	UNICODE_STRING device_name;
-	ULONG skip_naming;
-	BOOLEAN created_symbolic_link;
-	BOOLEAN created_serial_comm_entry;
-	WDFUSBPIPE data_read_pipe;
-	WDFUSBPIPE data_write_pipe;
-	WDFUSBPIPE register_write_pipe;
-	WDFUSBPIPE register_read_pipe;
-	WDFTIMER read_request_total_timer;
-	WDFTIMER read_request_interval_timer;
-	WDFREQUEST current_read_request;
-	WDFREQUEST current_write_request;
-	WDFREQUEST current_wait_request;
-	ULONG current_mask_value;
-	ULONG current_mask_history;
+    WDFUSBDEVICE usb_device;
+    ULONG usb_traits;
+    PDRIVER_OBJECT driver_object;
+    PDEVICE_OBJECT device_object;
+    WDFDEVICE device;
+    WDFUSBINTERFACE usb_interface;
+    UNICODE_STRING device_name;
+    ULONG skip_naming;
+    BOOLEAN created_symbolic_link;
+    BOOLEAN created_serial_comm_entry;
+    WDFUSBPIPE data_read_pipe;
+    WDFUSBPIPE data_write_pipe;
+    WDFUSBPIPE register_write_pipe;
+    WDFUSBPIPE register_read_pipe;
+    WDFTIMER read_request_total_timer;
+    WDFTIMER read_request_interval_timer;
+    WDFREQUEST current_read_request;
+    WDFREQUEST current_write_request;
+    WDFREQUEST current_wait_request;
+    ULONG current_mask_value;
+    ULONG current_mask_history;
 
-	unsigned port_number;
+    unsigned port_number;
 
-	WDFQUEUE write_queue;
-	WDFQUEUE read_queue;
-	WDFQUEUE default_queue;
+    WDFQUEUE write_queue;
+    WDFQUEUE read_queue;
+    WDFQUEUE default_queue;
 
-	WDFSPINLOCK istream_spinlock;
-	WDFSPINLOCK ostream_spinlock;
-	struct asynccom_frame *istream; // Transparent stream 
-	struct asynccom_frame *pending_oframe; // Frame being put in the FIFO 
+    WDFSPINLOCK istream_spinlock;
+    WDFSPINLOCK ostream_spinlock;
+    struct asynccom_frame *istream; // Transparent stream 
+    struct asynccom_frame *pending_oframe; // Frame being put in the FIFO 
 
-	WDFDPC process_write_dpc;
-	WDFDPC process_read_dpc;
+    WDFDPC process_write_dpc;
+    WDFDPC process_read_dpc;
 
-	struct asynccom_memory_cap memory_cap;
+    struct asynccom_memory_cap memory_cap;
 
-	//
-	// New async stuff added to port structure
-	//
-	UINT32 current_acr;
-	UINT32 current_mcr;
-	UINT32 current_clock_frequency;
-	unsigned short current_divisor;
-	ULONG current_baud;
-	UINT32 current_sample_rate;
-	unsigned char line_control;
-	unsigned char valid_data_mask;
-	unsigned char escape_char;
-	SERIAL_CHARS special_chars;
-	SERIAL_TIMEOUTS timeouts;
+    //
+    // New async stuff added to port structure
+    //
+    UINT32 current_acr;
+    UINT32 current_mcr;
+    UINT32 current_clock_frequency;
+    unsigned short current_divisor;
+    ULONG current_baud;
+    UINT32 current_sample_rate;
+    unsigned char line_control;
+    unsigned char valid_data_mask;
+    unsigned char escape_char;
+    SERIAL_CHARS special_chars;
+    SERIAL_TIMEOUTS timeouts;
 
-	ULONG TXHolding;
-	ULONG RXHolding;
-	ULONG buffer_size; //Is this necessary?
+    ULONG TXHolding;
+    ULONG RXHolding;
+    ULONG buffer_size; //Is this necessary?
 
-	SERIAL_HANDFLOW HandFlow;
+    SERIAL_HANDFLOW HandFlow;
 
 } ASYNCCOM_PORT, *PASYNCCOM_PORT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(ASYNCCOM_PORT, GetPortContext)
 
 typedef struct _REQUEST_CONTEXT {
-	ULONG_PTR information;
-	NTSTATUS status;
-	ULONG length;
-	PVOID ref_count;
-	UCHAR major_function;
-	PFN_WDF_REQUEST_CANCEL cancel_routine;
-	BOOLEAN cancelled;
-	PVOID type3_input_buffer;
-	ASYNCCOM_PORT *port;
-	ULONG ioctl_code;
-	BOOLEAN mark_cancelable_on_resume;
-	PVOID *data_buffer;
+    ULONG_PTR information;
+    NTSTATUS status;
+    ULONG length;
+    PVOID ref_count;
+    UCHAR major_function;
+    PFN_WDF_REQUEST_CANCEL cancel_routine;
+    BOOLEAN cancelled;
+    PVOID type3_input_buffer;
+    ASYNCCOM_PORT *port;
+    ULONG ioctl_code;
+    BOOLEAN mark_cancelable_on_resume;
+    PVOID *data_buffer;
 } REQUEST_CONTEXT, *PREQUEST_CONTEXT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(REQUEST_CONTEXT, GetRequestContext)
@@ -384,13 +384,13 @@ WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(REQUEST_CONTEXT, GetRequestContext)
 typedef
 USHORT
 (*PFN_KE_GET_ACTIVE_GROUP_COUNT)(
-	VOID
-	);
+    VOID
+    );
 
 typedef
 KAFFINITY
 (*PFN_KE_QUERY_GROUP_AFFINITY) (
-	_In_ USHORT GroupNumber
-	);
+    _In_ USHORT GroupNumber
+    );
 
 #endif

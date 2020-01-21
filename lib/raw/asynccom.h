@@ -1,22 +1,22 @@
 /*
 Copyright 2019 Commtech, Inc.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy 
-of this software and associated documentation files (the "Software"), to deal 
-in the Software without restriction, including without limitation the rights 
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-copies of the Software, and to permit persons to whom the Software is 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in 
+The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
@@ -29,10 +29,10 @@ extern "C"
 #endif
 #include <string.h>
 
-struct asynccom_memory_cap {
-	int input;
-	int output;
-};
+    struct asynccom_memory_cap {
+        int input;
+        int output;
+    };
 
 #define ASYNCCOM_IOCTL_MAGIC 0x8020
 #define ASYNCCOM_IOCTL_INDEX 0x800
@@ -70,7 +70,7 @@ struct asynccom_memory_cap {
 #define IOCTL_ASYNCCOM_DISABLE_9BIT CTL_CODE(ASYNCCOM_IOCTL_MAGIC, ASYNCCOM_IOCTL_INDEX+21, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_ASYNCCOM_GET_9BIT CTL_CODE(ASYNCCOM_IOCTL_MAGIC, ASYNCCOM_IOCTL_INDEX+22, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-// fixed baud rate
+    // fixed baud rate
 
 #define IOCTL_ASYNCCOM_REPROGRAM CTL_CODE(ASYNCCOM_IOCTL_MAGIC, ASYNCCOM_IOCTL_INDEX+26, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_ASYNCCOM_SET_DIVISOR CTL_CODE(ASYNCCOM_IOCTL_MAGIC, ASYNCCOM_IOCTL_INDEX+27, METHOD_BUFFERED, FILE_ANY_ACCESS)
